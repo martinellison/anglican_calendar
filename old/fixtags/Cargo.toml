@@ -1,0 +1,9 @@
+[package]
+name = "fixtags"
+version = "0.1.0"
+authors = ["martin <m.e@acm.org>"]
+edition = "2018"
+
+[dependencies]
+ron = "0.5.1"
+serde_derive = "1.0.92"

@@ -1,0 +1,13 @@
+[package]
+name = "edit_data"
+version = "0.1.0"
+authors = ["martin <m.e@acm.org>"]
+edition = "2018"
+
+[dependencies]
+anglican_calendar = { path = ".." }
+ansi_term = "0.11.0"
+structopt = "0.2.18"
+ron = "0.5.1"
+serde_derive = "1.0.94"
+

@@ -1,0 +1,26 @@
+  (
+    holydays: [   (
+            title: Some("THE PRESENTATION OF CHRIST IN THE TEMPLE (Candlemas)"),
+            description: Some(""),
+            main: Some([]),
+            other: Some([]),
+            death: Some(""),
+            refs: Some([
+                (
+                    website: Wikipedia,
+                    article: "Presentation of Jesus at the Temple",
+                    description: "Presentation of Jesus at the Temple",
+                ),
+            ]),
+            class: Some(Principal),
+            tag: "presentation",
+            has_eve: Some(false),
+            date_cal: Some(Fixed(
+                month: 2,
+                day: 2,
+            )),
+            transfer: Some(Normal),
+            delete: false,
+        ),
+    ],
+)

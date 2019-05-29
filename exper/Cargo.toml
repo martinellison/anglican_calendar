@@ -1,0 +1,13 @@
+[package]
+name = "exper"
+version = "0.1.0"
+authors = ["martin <m.e@acm.org>"]
+edition = "2018"
+
+[dependencies]
+anglican_calendar = { path = ".." }
+ansi_term = "0.11.0"
+ron = "0.5.1"
+chrono = "0.4.7"
+serde = "1.0.94"
+serde_derive = "1.0.94"

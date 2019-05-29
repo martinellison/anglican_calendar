@@ -1,0 +1,15 @@
+**/#*
+**/target/**
+**/target/debug/**
+*.o
+*~
+docs/#*
+process_data/target/*
+process_data/target/**
+process_data/target/debug/**
+src/#*
+src/.#*
+
+data/fix1
+
+README.html
