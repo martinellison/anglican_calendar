@@ -46,7 +46,7 @@ impl YearCalendar {
         let mut dates: Vec<&NaiveDate> = self.holydays_by_date.keys().collect();
         dates.sort();
         for d in dates {
-            let yee = self.holydays_by_date.get(&d).unwrap();
+            let yee = &self.holydays_by_date[&d];
             for ye in yee {
                 let yeb = ye.holyday.borrow();
                 let uid = format!("{}-{}", unique, ix);
@@ -122,7 +122,7 @@ impl YearCalendar {
         Assuming that 'saints days' means commemorations and lesser festivals.
              */
     pub fn fix_holyday_date_is_ok(
-        day_holydays: &Vec<YearHolyday>,
+        day_holydays: &[YearHolyday],
         ye: &mut YearHolyday,
         year: &Year,
     ) -> Result<bool, calendar::CalendarError> {
@@ -375,7 +375,7 @@ impl Year {
             NaiveDate::from_ymd(year, 3, 1) + Duration::days(i64::from(Self::computus(year) - 1));
         Self {
             ad: year,
-            easter: easter,
+            easter,
             advent_previous: Year::previous_inclusive(
                 Year::next_inclusive(NaiveDate::from_ymd(year - 1, 12, 1), chrono::Weekday::Thu),
                 chrono::Weekday::Sun,

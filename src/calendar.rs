@@ -24,13 +24,18 @@ pub struct Calendar {
 }
 /** A reference-counted pointer to an [Holyday] */
 pub type HolydayRef = Rc<RefCell<Holyday>>;
-impl Calendar {
-    /** create an empty calendar */
-    pub fn new() -> Self {
+impl Default for Calendar {
+    fn default() -> Self {
         Self {
             holydays: vec![],
             holydays_by_tag: HashMap::new(),
         }
+    }
+}
+impl Calendar {
+    /** create an empty calendar */
+    pub fn new() -> Self {
+        Self::default()
     }
     /** add an [Holyday] to a [Calendar] */
     pub fn add(&mut self, holyday: &Holyday) {
@@ -345,7 +350,7 @@ impl HolydayMod {
                 .ok_or_else(|| CalendarError::new("no has_eve"))?,
             date_cal: self
                 .date_cal
-                .clone()
+                .clone() // ignore clippy
                 .ok_or_else(|| CalendarError::new("no date_cal "))?,
             transfer: self
                 .transfer
@@ -450,7 +455,7 @@ impl PartialOrd for OrderableDayOfWeek {
 }
 impl From<chrono::Weekday> for OrderableDayOfWeek {
     fn from(wd: chrono::Weekday) -> Self {
-        Self { wd: wd }
+        Self { wd }
     }
 }
 impl From<OrderableDayOfWeek> for chrono::Weekday {

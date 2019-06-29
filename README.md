@@ -8,7 +8,7 @@ calendar of the Book of Common Prayer, and for the calendars of other
 churches.
 
 Warning: **this program is currently in alpha status and may result in
-incorrect data.**
+incorrect data.** Please raise any issues on GitHub.
 
 Also note:
 
@@ -27,7 +27,11 @@ Also note:
   a cause of dissention.
 * Please raise any issues on GitHub.
 * Some of the following requires technical knowledge at some level.
-
+* There are several calendar projects on GitHub for the Tridentine
+  calendar: [here](https://github.com/paucazou/theochrone) and
+  [here](https://github.com/joe-antognini/tridentine_calendar). This
+  project is not related to either of these.
+  
 ## How to do
 
 This section describes some of the most common things to do and some
@@ -42,14 +46,15 @@ guidelines on how to do them.
 
 ### How to load the holy days of a Church calendar into your calendar
 
+*Create a new test calendar in your calendar system for just your
+Church calendar, and import the holy days into this new
+calendar. Then, if you want to undo the load and remove all the holy
+days, you can just delete the test calendar. This is just an alpha
+version after all.*
+
 There are generated calendars in the `data/cals` directory. Most
 calendar programs have some way of loading these files into your
 calendar. You want to load a file with a name like `cofe-2019.ical`.
-
-*Create a new calendar in your calendar system for just your Church
-calendar, and import the holy days into this new calendar. Then, if
-you want to remove all the holy days, you can just delete the entire
-calendar.*
 
 Note that there may be a way to subscribe to a calendar over the
 internet, so if someone can set this up it may be the best solution.
@@ -58,20 +63,24 @@ Note: aca = Anglican Church of Australia, cofe = Church of England,
 ecusa = Episcopal Church of the United States of America, hkskh =
 Anglican Church of Hong Kong.
 
-### How to cancel these holy days
+### How to cancel these holy days out of your camera
 
-The `data/cals` directory also contains files with names like
-`cofe-del-2019.ical` (with `del`). These should be able to delete the
-entries created by the previous calendar. *This appears not to work
-with Google Calendar*.
+*Warning: the following appears not to work with Google Calendar, and
+has not been tested on anything else. You are probably better off just
+deleting the entire test calendar. You did load the holy days into a
+separate test calendar like it says in the previous section, didn't
+you?*. The `data/cals` directory also contains files with names like
+`cofe-del-2019.ical` (with `del`). These 'should' be able to delete
+the entries created by the previous calendar.
 
 ### How to generate the holy days for a new year
 
 Some technical knowledge required.
 
 1. At the moment, the programs are only distributed in source code
-   form, so you will need to build the code (see the next section). In
-   future, there will be pre-built executables for you to download.
+   form, so you will need to build the conversioin program from the
+   source code (see the next section). In future, there will be
+   pre-built executables for you to download.
 2. Ensure that you have a suitable calendar data file in the format
    required by this program. These can be found in the `data/final`
    directory. If you need a different calendar, see the information
@@ -97,32 +106,40 @@ Systems administration  knowledge required.
 
 1. The code is written in the rust programming language, so you will
    need to install the rust tool chain.
-2. Clone this repository.
+2. Clone this repository from GitHub.
 3. Build the executables. See the `scripts/build.sh` script for an
    idea of how to do this.
 
 ### How to modify a calendar or create a new calendar
 
-Systems administration  knowledge required.
+Systems administration knowledge required. Also, this is a mess and
+unnecessarily difficult to understand.
 
 Your options are:
 
 * modify the file in the `data/final` directory. At the moment, the
    only documentation for this format is in the source code for the
-   programs.
+   programs. **or**
 * use code such as in `scripts/make-data.sh` to derive a calendar data
   file from Wikipedia data. Good luck with this; you will need it.  
   * first replace commas with `@` signs where they separate fields in
   the input data. See files such as `data/original/cofe.txt` for an
   example.
+  * you can use the `edit-data` executable to modify a calendar data
+  file. This applies some edits (in their own format). It matches
+  edits to holy days using the `tag` field i.e. the tag nmust be the
+  same on the old holy day entry and the edit modification for the
+  edit to work.
 
 ### How to modify the code
 
 Application development knowledge required, including the rust
 programming language.
 
-The code includes documentation which can be displayed using tools
-such as `rustdoc`.
+The code includes documentation which can be displayed using rust
+tools such as `rustdoc`. Please see this documentation for additional
+information about the code internals. Please raise issues and pull
+requests if you can.
 
 ## The functionality of the executable
 
