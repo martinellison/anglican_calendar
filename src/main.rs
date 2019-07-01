@@ -1,4 +1,4 @@
-/*! main program
+/*! This the main program. It generates on ical calendar from an input file. See the Opts struct for the command line options.
 
 This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

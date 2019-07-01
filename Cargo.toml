@@ -1,6 +1,6 @@
 [package]
 name = "anglican_calendar"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["martin <m.e@acm.org>"]
 edition = "2018"
 description = "Calculates the holy days of a calendar of an Anglican church for a given year"

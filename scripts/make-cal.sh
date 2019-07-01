@@ -8,7 +8,7 @@ EDFILE=data/final/$P.data
 if [[ -f $EDFILE ]]
 then
     echo "generating calendar for" $P "for" $YEAR
-    target/debug/anglican_calendar -c $EDFILE -i data/cals/$P-$YEAR.ical -d data/cals/$P-del-$YEAR.ical -y $YEAR -u ang-alpha
+    target/debug/anglican_calendar -c $EDFILE -i data/cals/$P-$YEAR.ical -d data/cals/$P-del-$YEAR.ical -y $YEAR -u ang-alpha -v
     RES=$?
     if [[ $RES != 0 ]]
     then

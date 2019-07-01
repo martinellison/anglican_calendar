@@ -15,7 +15,7 @@ dependencies = [
 
 [[package]]
 name = "anglican_calendar"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -191,7 +191,7 @@ dependencies = [
 name = "edit_data"
 version = "0.1.0"
 dependencies = [
- "anglican_calendar 0.1.1",
+ "anglican_calendar 0.1.2",
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ron 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.94 (registry+https://github.com/rust-lang/crates.io-index)",

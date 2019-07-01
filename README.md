@@ -165,6 +165,7 @@ or write a plain text file (file path and name).
   * Fridays and other fasts (eves)
   * ember days
   * seasons and martyrs (in colour)
+  
 ## Points to note ##
 
 * the same holy day may have slightly different names in different
@@ -180,7 +181,7 @@ or write a plain text file (file path and name).
 not, a 23rd Sunday after Trinity will depend on the date of Easter in
 the year and the date of Advent in the following year.
 
-####Bumping (transfer) of holy days  
+#### Bumping (transfer) of holy days
 
 The program ensures that dates are bumped correctly [hopefully]. 
 

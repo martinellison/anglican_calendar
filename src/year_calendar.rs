@@ -1,6 +1,7 @@
 /*! a calendar for a specific year */
 use crate::calendar;
 use ansi_term::Color::Yellow;
+use ansi_term::Colour::*;
 use chrono::offset::TimeZone;
 use chrono::Datelike;
 use chrono::Duration;
@@ -30,6 +31,14 @@ impl YearCalendar {
             holydays_by_date: HashMap::new(),
         };
         for e in calendar.get_holydays() {
+            println!(
+                "{}",
+                Green.bold().paint(format!(
+                    "converting {} ({:?})",
+                    e.borrow().title,
+                    e.borrow().class
+                ))
+            );
             let mut ye = YearHolyday::from_holyday(&e, &ycal.year);
             ycal.add(&mut ye, &y, verbose)?;
         }
@@ -112,15 +121,19 @@ impl YearCalendar {
         Ok(())
     }
     /**
-    Tests if an holyday exists for the current year and, if necessary,
-        transfers the holyday to another date, to avoid clashes with other
-        holydays that might be on the same date.
+     Tests if an holyday exists for the current year and, if necessary,
+     transfers the holyday to another date, to avoid clashes with other
+     holydays that might be on the same date.
 
-        See (the rules).
-        [https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules]
+    See (the rules).
+    [https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules]
 
-        Assuming that 'saints days' means commemorations and lesser festivals.
-             */
+    Assuming that 'saints days' means commemorations and lesser festivals.
+
+    Note that some lesser festivals will be dropped altogether e.g. if
+    they appear on a Sumday but commemorations appearing on the same day
+    will not be dropped.
+                 */
     pub fn fix_holyday_date_is_ok(
         day_holydays: &[YearHolyday],
         ye: &mut YearHolyday,

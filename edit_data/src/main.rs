@@ -1,4 +1,4 @@
-/** edit input data */
+/**  This program can be used to edit the input data */
 extern crate anglican_calendar;
 extern crate structopt;
 //use crate::calendar;

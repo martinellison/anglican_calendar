@@ -315,15 +315,13 @@ pub struct HolydayMod {
 impl HolydayMod {
     /** convert an EdMod to an [Holyday]. All fields must be specified. */
     pub fn to_holyday(&self) -> Result<Holyday, CalendarError> {
+        let title = self
+            .clone()
+            .title
+            .ok_or_else(|| CalendarError::new(&format!("no title ({:?})", self.tag)))?;
         let e = Holyday {
-            title: self
-                .clone()
-                .title
-                .ok_or_else(|| CalendarError::new(&format!("no title ({:?})", self.tag)))?,
-            description: self
-                .clone()
-                .description
-                .ok_or_else(|| CalendarError::new("no description"))?,
+            title: title.clone(),
+            description: self.clone().description.unwrap_or(title.clone()),
             main: self
                 .main
                 .clone()
@@ -332,10 +330,7 @@ impl HolydayMod {
                 .other
                 .clone()
                 .ok_or_else(|| CalendarError::new("no other "))?,
-            death: self
-                .death
-                .clone()
-                .ok_or_else(|| CalendarError::new("no death "))?,
+            death: self.death.clone().unwrap_or("".to_string()),
             refs: self
                 .refs
                 .clone()
@@ -381,11 +376,11 @@ impl Default for HolydayMod {
 impl From<Holyday> for HolydayMod {
     fn from(e: Holyday) -> Self {
         Self {
-            title: Some(e.title),
-            description: Some(e.description),
+            title: some_unless_blank(&e.title),
+            description: some_unless_blank(&e.description),
             main: Some(e.main),
             other: Some(e.other),
-            death: Some(e.death),
+            death: some_unless_blank(&e.death),
             refs: Some(e.refs),
             class: Some(e.class),
             tag: e.tag,
@@ -394,6 +389,13 @@ impl From<Holyday> for HolydayMod {
             transfer: Some(e.transfer),
             delete: false,
         }
+    }
+}
+fn some_unless_blank(s: &str) -> Option<String> {
+    if s == "" {
+        None
+    } else {
+        Some(s.to_string())
     }
 }
 
