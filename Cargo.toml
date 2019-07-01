@@ -1,8 +1,19 @@
 [package]
 name = "anglican_calendar"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["martin <m.e@acm.org>"]
 edition = "2018"
+description = "Calculates the holy days of a calendar of an Anglican church for a given year"
+repository = "github.com/martinellison/anglican_calendar"
+readme="README.md"
+keywords=["religious", "anglican", "calendar"]
+# categories="date-and-time"
+license="GPL3"
+# license-file="COPYING"
+
+[badges]
+
+maintenance = { status = "experimental" }
 
 [dependencies]
 ansi_term = "0.11.0"
@@ -12,4 +23,4 @@ ron = "0.5.1"
 structopt = "0.2.18"
 chrono = { version = "0.4.7", features = ["serde"] }
 icalendar = "0.6.0"
-color-backtrace = "0.2.1"
+color-backtrace = "0.2.2"
