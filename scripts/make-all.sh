@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # merge some calendars into one combined calendar   with all the holy days from the calendars. 
-PROVS="aca ecusa hkskh" # use cofe as the original, these are all the others
+PROVS="aca acc acsa bcp ecusa hkskh " # use cofe as the original, these are all the others
 ORIG=cofe
 
 EDITS=""

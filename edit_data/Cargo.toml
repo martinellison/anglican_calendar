@@ -6,8 +6,8 @@ edition = "2018"
 
 [dependencies]
 anglican_calendar = { path = ".." }
-ansi_term = "0.11.0"
+ansi_term = "0.12.0"
 structopt = "0.2.18"
 ron = "0.5.1"
-serde_derive = "1.0.94"
+serde_derive = "1.0.98"
 

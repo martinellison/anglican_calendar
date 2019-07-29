@@ -1,4 +1,21 @@
-/**  This program can be used to edit the input data */
+/*! This program can be used to edit the input data.
+
+There are several kinds of edits that are possible.
+
+* make changes to a calendar
+* make the same changes to several calendars
+* merge several calendars
+* clean up a calendar file by reformatting it ('pretty')
+* clean up an edit file by reformatting it ('pretty')
+
+The merges and edits work using the tag field to identify each holy day.
+
+Ther are two file formats:
+
+* calendars file (also used by other programs in this group)
+* edit files
+
+Check the command line options for the specific details of how to carry out these edits. */
 extern crate anglican_calendar;
 extern crate structopt;
 //use crate::calendar;
@@ -81,6 +98,8 @@ fn run() -> Result<(), calendar::CalendarError> {
         let mut bwb = open_out_file(opt.out_file.unwrap().as_str())?;
         let mut bw = bwb.as_mut();
         if let Some(mut c) = cal {
+            let descr = opt.descr.clone().unwrap_or("".to_string());
+            c.info = calendar::FileInfo::new(&descr, "edit data");
             c.write(&mut bw).unwrap()
         }
     }
@@ -110,6 +129,9 @@ pub struct Opt {
     /// As-edits suffix -- used to convert calendar to edits
     #[structopt(short = "a", long = "asedits")]
     as_edits: Option<String>,
+    /// Description for output file
+    #[structopt(short = "d", long = "descr")]
+    descr: Option<String>,
 }
 /*
 

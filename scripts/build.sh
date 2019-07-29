@@ -20,7 +20,7 @@ fi
 echo "testing..."
 cargo test
 
-for D in edit_data process_data 
+for D in reports edit_data process_data 
 do
     echo "building" $D
     cd $BASE/$D

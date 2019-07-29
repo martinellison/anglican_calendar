@@ -8,7 +8,9 @@ fi
 cd $BASE
 echo "generating main documentation..."
 cargo +nightly doc --open
-cd $BASE/process_data
-echo "generating process data documentation..."
-cargo +nightly doc --open
+for X in process_data edit_data reports; do
+    cd $BASE/$X
+    echo "generating $X documentation..."
+    cargo +nightly doc --open
+done
 echo "documentation run"

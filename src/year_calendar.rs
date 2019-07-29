@@ -1,7 +1,9 @@
-/*! a calendar for a specific year */
+/*! Implements a calendar for a specific year, as derived from a [calendar::Calendar] */
+extern crate askama;
 use crate::calendar;
 use ansi_term::Color::Yellow;
 use ansi_term::Colour::*;
+use askama::Template;
 use chrono::offset::TimeZone;
 use chrono::Datelike;
 use chrono::Duration;
@@ -10,11 +12,13 @@ use chrono::Utc;
 use icalendar::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::io::Write;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 /** A YearCalendar is a calendar for a specific year for a specific
 church e.g. the 2019 calendar of the Anglican Church of Hong Kong. */
 pub struct YearCalendar {
+    province: calendar::Province,
     year: Year,
     holydays_by_date: HashMap<NaiveDate, Vec<YearHolyday>>,
 }
@@ -28,27 +32,37 @@ impl YearCalendar {
         let y = Year::new(year);
         let mut ycal = Self {
             year: y.clone(),
+            province: calendar.province,
             holydays_by_date: HashMap::new(),
         };
         for e in calendar.get_holydays() {
+            let eb = e.borrow();
+            let mut ye = YearHolyday::from_holyday(&e, &ycal.year);
             println!(
                 "{}",
                 Green.bold().paint(format!(
-                    "converting {} ({:?})",
-                    e.borrow().title,
-                    e.borrow().class
+                    "converting {} ({:?}) {}",
+                    eb.title,
+                    eb.class,
+                    ye.colour(&y)
                 ))
             );
-            let mut ye = YearHolyday::from_holyday(&e, &ycal.year);
             ycal.add(&mut ye, &y, verbose)?;
         }
         Ok(ycal)
     }
     /** Generate an iCalendar. Also generate the calendar updates to cancel the entries.
 
-    See {the RFC)[https://tools.ietf.org/html/rfc5545] for details of the iCalendar format. */
+    See [RFC 5545](https://tools.ietf.org/html/rfc5545) and [RFC
+    7986](https://tools.ietf.org/html/rfc7986) for details of the
+    iCalendar format. */
+
     pub fn to_ical(&self, unique: &str) -> (icalendar::Calendar, icalendar::Calendar) {
         let mut ical = icalendar::Calendar::new();
+
+        /* TODO: add calendar properties here e.g. set
+         * REFRESH-INTERVAL to P4W i.e. refresh every 4 weeks */
+
         let mut ical_del = icalendar::Calendar::new();
         println!("unique code for holydays is {}", unique);
         let mut ix = 0;
@@ -59,13 +73,15 @@ impl YearCalendar {
             for ye in yee {
                 let yeb = ye.holyday.borrow();
                 let uid = format!("{}-{}", unique, ix);
-                let e = icalendar::Event::new()
+                let mut e1a = icalendar::Event::new();
+                let e = e1a
                     .summary(&yeb.title)
                     .description(&yeb.description)
-                    .all_day(Utc.from_utc_date(&ye.date)) /* ?? */
+                    .all_day(Utc.from_utc_date(&ye.date))
                     .uid(&uid)
                     .append_property(icalendar::Property::new("TRANSP", "TRANSPARENT"))
                     .append_property(icalendar::Property::new("SEQUENCE", "0"))
+                    .append_property(icalendar::Property::new("COLOR", &ye.colour(&self.year)))
                     .done();
                 ical.push(e);
                 let e_del = icalendar::Event::new()
@@ -78,6 +94,47 @@ impl YearCalendar {
             }
         }
         (ical, ical_del)
+    }
+    /** Write a human-readable report to a file. */
+    pub fn write_report(&self, w: &mut dyn Write) -> Result<(), calendar::CalendarError> {
+        let mut rt = ReportTemplate {
+            dates: vec![],
+            year: self.year.ad,
+            province: self.province.to_string(),
+        };
+        let mut dates: Vec<&NaiveDate> = self.holydays_by_date.keys().collect();
+        dates.sort();
+        for d in dates {
+            let season_colour = self.year.season_colour(*d);
+            let mut rd = ReportDate {
+                date: *d,
+                date_form: d.format("%A %B %e").to_string(),
+                holydays: vec![],
+                colour_a: season_colour.colour_a(),
+                colour_b: season_colour.colour_b(),
+            };
+            let yee = &self.holydays_by_date[&d];
+            for ye in yee {
+                let yeb = ye.holyday.borrow().clone();
+                let mut refs_format: Vec<(String, String)> = vec![];
+                for r in &yeb.refs {
+                    refs_format.push((r.url(), r.description.clone()));
+                }
+                let rhd = ReportHolyday {
+                    title: yeb.title.clone(),
+                    description: yeb.description.clone(),
+                    other: yeb.other.clone(),
+                    refs_format,
+                    class_format: yeb.class.to_string(),
+                };
+                rd.holydays.push(rhd);
+            }
+            rt.dates.push(rd);
+        }
+        let r = rt.render().map_err(calendar::CalendarError::from_error)?;
+        w.write_all(r.as_bytes())
+            .map_err(calendar::CalendarError::from_error)
+        //        Ok(())
     }
     fn add(
         &mut self,
@@ -96,7 +153,7 @@ impl YearCalendar {
             }
             let mut de = vec![];
             Self::add_holyday_if_ok(&mut de, ye, year, verbose)?;
-            self.holydays_by_date.insert(ye.date, de);
+            self.holydays_by_date.insert(ye.date, de); // may insert empty list, is ok
         };
         Ok(())
     }
@@ -104,19 +161,26 @@ impl YearCalendar {
         day_holydays: &mut Vec<YearHolyday>,
         ye: &mut YearHolyday,
         year: &Year,
-        verbose: bool,
+        _verbose: bool,
     ) -> Result<(), calendar::CalendarError> {
-        if Self::fix_holyday_date_is_ok(day_holydays, ye, year)? {
-            day_holydays.push(ye.clone());
-        } else if verbose {
-            println!(
-                "{}",
-                Yellow.bold().paint(format!(
-                    "{} ({}) dropped",
-                    ye.holyday.borrow().title,
-                    ye.date
-                ))
-            );
+        let ds = Self::fix_holyday_date_is_ok(day_holydays, ye, year);
+        match ds {
+            DropStatus::Keep => {
+                day_holydays.push(ye.clone());
+            }
+            DropStatus::Drop(r) => {
+                // if verbose {
+                println!(
+                    "{}",
+                    Yellow.bold().paint(format!(
+                        "{} ({}) dropped because {:?}",
+                        ye.holyday.borrow().title,
+                        ye.date,
+                        r
+                    ))
+                );
+                // }
+            }
         }
         Ok(())
     }
@@ -125,10 +189,9 @@ impl YearCalendar {
      transfers the holyday to another date, to avoid clashes with other
      holydays that might be on the same date.
 
-    See (the rules).
-    [https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules]
+    See [the rules](https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules).
 
-    Assuming that 'saints days' means commemorations and lesser festivals.
+    The calculation assumes that 'saints days' means commemorations and lesser festivals.
 
     Note that some lesser festivals will be dropped altogether e.g. if
     they appear on a Sumday but commemorations appearing on the same day
@@ -138,7 +201,7 @@ impl YearCalendar {
         day_holydays: &[YearHolyday],
         ye: &mut YearHolyday,
         year: &Year,
-    ) -> Result<bool, calendar::CalendarError> {
+    ) -> DropStatus {
         // calculate some dates and date ranges
 
         let is_sunday = ye.date.weekday() == chrono::Weekday::Sun;
@@ -168,7 +231,7 @@ impl YearCalendar {
             println!("{} ({}) is in easter", ye.holyday.borrow().title, ye.date);
         }
 
-        let has_clash = !day_holydays.is_empty();
+        let has_clash = !day_holydays.is_empty(); // TODO only if different levels
         let mut clash_level = calendar::HolydayClass::NotAFestival;
         if has_clash {
             for ce in day_holydays.iter() {
@@ -188,38 +251,52 @@ impl YearCalendar {
             print!("{}", ye.holyday.borrow().title);
             println!();
         }
-        let t = ye.holyday.borrow().transfer;
+
+        let t = ye.holyday.borrow().transfer.clone();
         let c = ye.holyday.borrow().class;
+        let clash_higher = has_clash && clash_level > c;
         match t {
             // TODO no 'saints days' in Easter Week
             calendar::TransferType::Normal => match c {
                 calendar::HolydayClass::Commemoration => {
                     /* no transfer required */
-                    Ok(!is_in_easter)
+                    if is_in_easter {
+                        DropStatus::Drop(DropReason::Easter)
+                    } else {
+                        DropStatus::Keep
+                    }
                 }
                 calendar::HolydayClass::LesserFestival => {
-                    Ok(!has_clash && !is_sunday && !is_in_easter)
+                    if is_in_easter {
+                        DropStatus::Drop(DropReason::Easter)
+                    } else if clash_higher {
+                        DropStatus::Drop(DropReason::Clash)
+                    } else if is_sunday {
+                        DropStatus::Drop(DropReason::Sunday)
+                    } else {
+                        DropStatus::Keep
+                    }
                 }
                 calendar::HolydayClass::Festival | calendar::HolydayClass::CorpusChristi => {
-                    if (is_sunday && (is_in_advent || is_in_lent_or_eastertide)) || clash_level > c
-                    {
+                    if (is_sunday && (is_in_advent || is_in_lent_or_eastertide)) || clash_higher {
                         ye.change_date_by(Duration::days(1))
                     }
-                    Ok(true)
+                    DropStatus::Keep
                 }
                 calendar::HolydayClass::Principal => {
-                    if has_clash {
-                        Err(calendar::CalendarError::new(&format!(
-                            "principal holyday {} may not be moved; reorder to start of holydays.",
-                            ye.holyday.borrow().title
-                        )))
-                    } else {
-                        Ok(true)
-                    }
+                    // if has_clash {
+                    //     // Err(calendar::CalendarError::new(&format!(
+                    //     //     "principal holyday {} may not be moved; reorder to start of holydays.",
+                    //     //     ye.holyday.borrow().title
+                    //     // )))
+                    //     DropStatus::Drop(DropReason::Clash) // ??
+                    // } else {
+                    DropStatus::Keep
+                    // }
                 }
                 calendar::HolydayClass::Unclassified => {
                     /* no transfer required? */
-                    Ok(true)
+                    DropStatus::Keep
                 }
                 calendar::HolydayClass::NotAFestival => panic!("bad class"),
             },
@@ -227,7 +304,7 @@ impl YearCalendar {
                 if is_sunday {
                     ye.change_date_by(Duration::days(1))
                 }
-                Ok(true)
+                DropStatus::Keep
             }
             // calendar::TransferType::BaptismOfChrist => {
             //     Ok(true)
@@ -242,13 +319,13 @@ impl YearCalendar {
                     };
                     ye.change_date_to(year.easter_sunday_2 + Duration::days(days));
                 }
-                Ok(true)
+                DropStatus::Keep
             }
             calendar::TransferType::George => {
                 if is_in_easter {
                     ye.change_date_to(year.easter_sunday_2 + Duration::days(1))
                 }
-                Ok(true)
+                DropStatus::Keep
             }
             calendar::TransferType::Mark => {
                 if is_in_easter {
@@ -260,10 +337,32 @@ impl YearCalendar {
                     };
                     ye.change_date_to(year.easter_sunday_2 + Duration::days(days));
                 }
-                Ok(true)
+                DropStatus::Keep
+            }
+            calendar::TransferType::Before(cutoff) => {
+                if ye.date >= year.date_cal_to_date(&cutoff) {
+                    DropStatus::Drop(DropReason::Cutoff)
+                } else {
+                    DropStatus::Keep
+                }
             }
         }
     }
+}
+/** whether a [YearHolyday] will be dropped. */
+#[derive(Debug, Eq, PartialEq)]
+pub enum DropStatus {
+    Keep,
+    Drop(DropReason),
+}
+/** reason for dropping a [YearHolyday] */
+#[derive(Debug, Eq, PartialEq)]
+pub enum DropReason {
+    Easter,
+    Clash,
+    Sunday,
+    Cutoff,
+    Other,
 }
 #[derive(Debug, Eq, PartialEq, Clone)]
 /** A YearHolyday is an holyday in the calendar for a specific year
@@ -274,7 +373,7 @@ pub struct YearHolyday {
     date: NaiveDate,
 }
 impl YearHolyday {
-    /** Create a [YearHolyday] from an [Holyday] given the [Year] data. */
+    /** Create a [YearHolyday] from an [calendar::Holyday] given the [Year] data. */
     pub fn from_holyday(holyday: &calendar::HolydayRef, year: &Year) -> Self {
         Self {
             holyday: holyday.clone(),
@@ -310,6 +409,36 @@ impl YearHolyday {
             ))
         );
     }
+    /** the display colour for this holy day, from the CSS3 set of
+    colour names, see https://www.w3.org/TR/css-color-3 */
+    pub fn colour(&self, year: &Year) -> String {
+        let hd = self.holyday.borrow();
+        /* "If the Collect, Readings, etc. on a Lesser Festival are
+        those of the saint, then either red (for a martyr) or white is
+        used; " */
+        match hd.class {
+            // calendar::HolydayClass::Principal
+            // | calendar::HolydayClass::CorpusChristi
+            // |
+            calendar::HolydayClass::Festival | calendar::HolydayClass::LesserFestival => {
+                let is_martyr = hd.main.contains(&calendar::MainAttribute::Martyr);
+                let fest_col = if is_martyr { "red" } else { "white" };
+                println!(
+                    "{} has colour {} for {:?}",
+                    self.holyday.borrow().title,
+                    fest_col,
+                    hd.class
+                );
+                fest_col.to_string()
+            }
+            _ => match year.season_colour(self.date) {
+                calendar::SeasonColour::White => "white".to_string(),
+                calendar::SeasonColour::Red => "red".to_string(),
+                calendar::SeasonColour::Purple => "purple".to_string(),
+                calendar::SeasonColour::Green => "green".to_string(),
+            },
+        }
+    }
 }
 impl Ord for YearHolyday {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -321,6 +450,29 @@ impl PartialOrd for YearHolyday {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
+}
+#[derive(Template)]
+#[template(path = "report.html")]
+struct ReportTemplate {
+    province: String,
+    year: i32,
+    dates: Vec<ReportDate>,
+}
+#[derive(Debug, Clone)]
+struct ReportDate {
+    date: NaiveDate,
+    date_form: String,
+    holydays: Vec<ReportHolyday>,
+    colour_a: String,
+    colour_b: String,
+}
+#[derive(Debug, Clone)]
+struct ReportHolyday {
+    title: String,
+    description: String,
+    class_format: String,
+    other: Vec<String>,
+    refs_format: Vec<(String, String)>,
 }
 #[derive(Debug, Eq, PartialEq, Clone)]
 /** A Year contains data for a specific year e.g. the date of Easter.
@@ -530,6 +682,49 @@ impl Year {
         let offset = i64::from(req_dow - orig_dow + if req_dow <= orig_dow { 0 } else { -7 });
         orig_date + Duration::days(offset)
     }
+    /** The seasonal colour for a date. See [https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules].
+     */
+    pub fn season_colour(&self, date: NaiveDate) -> calendar::SeasonColour {
+        /* "White is the colour for the festal periods from Christmas
+        Day to the Presentation and from Easter Day to the Eve of
+        Pentecost, for Trinity Sunday, for Festivals of Our Lord and
+        the Blessed Virgin Mary, for All Saints’ Day, and for the
+        Festivals of those saints not venerated as martyrs, for the
+        Feast of Dedication of a church, at Holy Communion on Maundy
+        Thursday and in thanksgiving for Holy Communion and Holy
+        Baptism..." */
+
+        if date >= NaiveDate::from_ymd(self.ad, 12, 25)
+            || date <= NaiveDate::from_ymd(self.ad, 2, 2)
+            || (date >= self.easter && date < self.pentecost)
+            || date == NaiveDate::from_ymd(self.ad, 11, 1)
+        // TODO  for Trinity Sunday, for Festivals of Our Lord and the Blessed Virgin Mary,
+        {
+            calendar::SeasonColour::White
+        }
+        /* "Red is used during Holy Week (except at Holy Communion on
+         * Maundy Thursday), on the Feast of Pentecost... Coloured
+         * hangings are traditionally removed for Good Friday and
+         * Easter Eve, but red is the colour for the liturgy on Good
+         * Friday..." */
+        else if (date >= self.palm_sunday && date < self.easter) || date == self.pentecost {
+            calendar::SeasonColour::Red
+        }
+        /* "Purple ... is the colour for Advent and from Ash Wednesday
+        until the day before Palm Sunday..." */
+        else if (date >= self.advent_next && date < NaiveDate::from_ymd(self.ad, 12, 25))
+            || (date >= self.ash_wednesday && date < self.palm_sunday)
+        {
+            calendar::SeasonColour::Purple
+        }
+        /* "Green is used from the day after the Presentation until
+        Shrove Tuesday, and from the day after Pentecost until the
+        eve of All Saints’ Day, except when other provision is
+        made..." */
+        else {
+            calendar::SeasonColour::Green
+        }
+    }
 }
 
 #[cfg(test)]
@@ -546,7 +741,7 @@ mod tests {
         let mut ye = YearHolyday::from_holyday(&Rc::new(RefCell::new(Holyday::default())), &year);
         let ye_exp = ye.clone();
         let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut ye, &year);
-        assert_eq!(true, er.unwrap());
+        assert_eq!(DropStatus::Keep, er);
         assert_eq!(ye_exp, ye, "bad holyday {:?}", ye);
     }
     #[test]
@@ -564,7 +759,7 @@ mod tests {
         };
         let mut ye = YearHolyday::from_holyday(&Rc::new(RefCell::new(holyday)), &year);
         let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut ye, &year);
-        assert_eq!(true, er.unwrap());
+        assert_eq!(DropStatus::Keep, er);
         assert_eq!(NaiveDate::from_ymd(2019, 4, 21), ye.date);
     }
     // TODO add more test dates to cover all special cases
@@ -682,12 +877,12 @@ mod tests {
                 class: calendar::HolydayClass::Principal,
                 tag: "test tag".to_string(),
                 date_cal: dc.clone(),
-                transfer: *t,
+                transfer: t.clone(),
                 ..Holyday::default()
             };
             let mut ye = YearHolyday::from_holyday(&Rc::new(RefCell::new(holyday)), &year);
             let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut ye, &year);
-            assert_eq!(true, er.unwrap());
+            assert_eq!(DropStatus::Keep, er);
             assert_eq!(
                 *ed,
                 ye.date,

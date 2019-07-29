@@ -17,7 +17,6 @@ extern crate structopt;
 use anglican_calendar::calendar;
 use anglican_calendar::year_calendar;
 use ansi_term::Colour::*;
-//use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::io::{BufReader, BufWriter};
@@ -54,21 +53,35 @@ fn run() -> Result<(), calendar::CalendarError> {
         opt.year
     );
     let (ical, ical_del) = year_cal.to_ical(ident.as_str());
-    println!(
-        "{}",
-        Green.paint(format!("writing year calendar {}", opt.ical_filename))
-    );
-    let of = File::create(opt.ical_filename).map_err(calendar::CalendarError::from_error)?;
-    let mut bw = BufWriter::new(of);
-    bw.write(ical.to_string().as_bytes())
-        .map_err(calendar::CalendarError::from_error)?;
-    bw.flush().map_err(calendar::CalendarError::from_error)?;
+    if let Some(ical_fn) = opt.ical_filename {
+        println!(
+            "{}",
+            Green.paint(format!("writing year calendar {}", ical_fn))
+        );
+        let of = File::create(ical_fn).map_err(calendar::CalendarError::from_error)?;
+        let mut bw = BufWriter::new(of);
+        bw.write(ical.to_string().as_bytes())
+            .map_err(calendar::CalendarError::from_error)?;
+        bw.flush().map_err(calendar::CalendarError::from_error)?;
+    }
 
-    let of = File::create(opt.ical_del_filename).map_err(calendar::CalendarError::from_error)?;
-    let mut bw = BufWriter::new(of);
-    bw.write(ical_del.to_string().as_bytes())
-        .map_err(calendar::CalendarError::from_error)?;
-    bw.flush().map_err(calendar::CalendarError::from_error)?;
+    if let Some(dfn) = opt.ical_del_filename {
+        let of = File::create(dfn).map_err(calendar::CalendarError::from_error)?;
+        let mut bw = BufWriter::new(of);
+        bw.write(ical_del.to_string().as_bytes())
+            .map_err(calendar::CalendarError::from_error)?;
+        bw.flush().map_err(calendar::CalendarError::from_error)?;
+    }
+    if let Some(report_fn) = opt.report_filename {
+        println!(
+            "{}",
+            Green.paint(format!("writing year calendar report {}", report_fn))
+        );
+        let of = File::create(report_fn).map_err(calendar::CalendarError::from_error)?;
+        let mut bw = BufWriter::new(of);
+        year_cal.write_report(&mut bw)?;
+        bw.flush().map_err(calendar::CalendarError::from_error)?;
+    }
     Ok(())
 }
 #[derive(StructOpt, Debug)]
@@ -89,11 +102,14 @@ pub struct Opt {
     calendar_filename: String,
     /// iCal output file
     #[structopt(short = "i", long = "ical")]
-    ical_filename: String,
-    /// iCal output file for deletion
+    ical_filename: Option<String>,
+    /// report output file
+    #[structopt(short = "r", long = "report")]
+    report_filename: Option<String>,
+    /// iCal output file for deletion (apparently does not work)
     #[structopt(short = "d", long = "delical")]
-    ical_del_filename: String,
-    /// unique identifier for calendar e.g. dpmain name or email address
+    ical_del_filename: Option<String>,
+    /// unique identifier for calendar **do not use** domain name or email address
     #[structopt(short = "u", long = "unique")]
     unique: String,
 }

@@ -1,4 +1,10 @@
 (
+    info: (
+        description: "added feasts",
+        created: "2019-07-29T04:36:23.474786480Z",
+        creation: "edit data",
+    ),
+    province: ECUSA,
     holydays: [
         (
             title: "The Holy Name of Our Lord Jesus Christ",
@@ -24,11 +30,12 @@
         ),
         (
             title: "Vedanayagam Samuel Azariah",
-            description: "First Indian Anglican Bishop, Dornakal",
+            description: "First Indian Anglican Bishop, Dornakal, 1945",
             main: [],
             other: [
                 "First Indian Anglican Bishop",
                 "Dornakal",
+                "1945",
             ],
             death: "1945",
             refs: [],
@@ -43,10 +50,11 @@
         ),
         (
             title: "William Passavant",
-            description: "Prophetic Witness",
+            description: "Prophetic Witness, 1894",
             main: [],
             other: [
                 "Prophetic Witness",
+                "1894",
             ],
             death: "1894",
             refs: [],
@@ -61,10 +69,11 @@
         ),
         (
             title: "Elizabeth Seton",
-            description: "Founder of the American Sisters of Charity",
+            description: "Founder of the American Sisters of Charity, 1821",
             main: [],
             other: [
                 "Founder of the American Sisters of Charity",
+                "1821",
             ],
             death: "1821",
             refs: [
@@ -107,10 +116,11 @@
         ),
         (
             title: "Harriet Bedell",
-            description: "Deaconess and Missionary",
+            description: "Deaconess and Missionary, 1969",
             main: [],
             other: [
                 "Deaconess and Missionary",
+                "1969",
             ],
             death: "1969",
             refs: [],
@@ -125,9 +135,11 @@
         ),
         (
             title: "Julia Chester Emery",
-            description: "",
+            description: "1922",
             main: [],
-            other: [],
+            other: [
+                "1922",
+            ],
             death: "1922",
             refs: [],
             class: Commemoration,
@@ -141,10 +153,11 @@
         ),
         (
             title: "William Laud",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 1645",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "1645",
             ],
             death: "1645",
             refs: [],
@@ -159,10 +172,11 @@
         ),
         (
             title: "Aelred",
-            description: "Abbot of Rievaulx",
+            description: "Abbot of Rievaulx, 1167",
             main: [],
             other: [
                 "Abbot of Rievaulx",
+                "1167",
             ],
             death: "1167",
             refs: [
@@ -188,10 +202,11 @@
         ),
         (
             title: "Hilary",
-            description: "Bishop of Poitiers",
+            description: "Bishop of Poitiers, 367",
             main: [],
             other: [
                 "Bishop of Poitiers",
+                "367",
             ],
             death: "367",
             refs: [
@@ -233,11 +248,14 @@
             transfer: Normal,
         ),
         (
-            title: "Richard Meux Benson, Religious, 1915, and Charles Gore, Bishop of Worcester, of Birmingham, and of Oxford, 1932",
-            description: "",
+            title: "Richard Meux Benson",
+            description: "Religious, 1915",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Religious",
+                "1915",
+            ],
+            death: "1915",
             refs: [],
             class: Commemoration,
             tag: "richard meux benson",
@@ -249,11 +267,28 @@
             transfer: Normal,
         ),
         (
+            title: "16Charles Gore",
+            description: "Bishop of Worcester, of Birmingham, and of Oxford, 1932",
+            main: [],
+            other: [
+                "Bishop of Worcester, of Birmingham, and of Oxford",
+                "1932",
+            ],
+            death: "",
+            refs: [],
+            class: Commemoration,
+            tag: "charles gore",
+            has_eve: false,
+            date_cal: Easter,
+            transfer: Normal,
+        ),
+        (
             title: "Antony",
-            description: "Abbot in Egypt",
+            description: "Abbot in Egypt, 356",
             main: [],
             other: [
                 "Abbot in Egypt",
+                "356",
             ],
             death: "356",
             refs: [
@@ -296,9 +331,11 @@
         ),
         (
             title: "Wulfstan",
-            description: "",
+            description: "Bishop of Worcester 1095",
             main: [],
-            other: [],
+            other: [
+                "Bishop of Worcester 1095",
+            ],
             death: "Bishop of Worcester 1095",
             refs: [
                 (
@@ -318,12 +355,13 @@
         ),
         (
             title: "Fabian",
-            description: "Bishop and Martyr of Rome",
+            description: "Bishop and Martyr of Rome, 250",
             main: [
                 Martyr,
             ],
             other: [
                 "Bishop and Martyr of Rome",
+                "250",
             ],
             death: "250",
             refs: [
@@ -344,12 +382,13 @@
         ),
         (
             title: "Agnes",
-            description: "Martyr at Rome",
+            description: "Martyr at Rome, 304",
             main: [
                 Martyr,
             ],
             other: [
                 "Martyr at Rome",
+                "304",
             ],
             death: "304",
             refs: [
@@ -370,13 +409,14 @@
         ),
         (
             title: "Vincent",
-            description: "Deacon of Saragossa, and Martyr",
+            description: "Deacon of Saragossa, and Martyr, 304",
             main: [
                 Martyr,
             ],
             other: [
                 "Deacon of Saragossa",
                 "and Martyr",
+                "304",
             ],
             death: "304",
             refs: [
@@ -397,10 +437,11 @@
         ),
         (
             title: "Phillips Brooks",
-            description: "Bishop of Massachusetts",
+            description: "Bishop of Massachusetts, 1893",
             main: [],
             other: [
                 "Bishop of Massachusetts",
+                "1893",
             ],
             death: "1893",
             refs: [],
@@ -415,15 +456,16 @@
         ),
         (
             title: "Ordination of Florence Li Tim-Oi",
-            description: "First Woman Priest in the Anglican Communion",
+            description: "First Woman Priest in the Anglican Communion, 1944",
             main: [],
             other: [
                 "First Woman Priest in the Anglican Communion",
+                "1944",
             ],
             death: "1944",
             refs: [],
             class: Commemoration,
-            tag: "ordination of florence li tim-oi",
+            tag: "ordination of florence li tim",
             has_eve: false,
             date_cal: Fixed(
                 month: 1,
@@ -454,10 +496,12 @@
             transfer: Normal,
         ),
         (
-            title: "Timothy, Titus, and Silas, Companions of Saint Paul",
-            description: "",
+            title: "Timothy, Titus, and Silas",
+            description: "Companions of Saint Paul",
             main: [],
-            other: [],
+            other: [
+                "Companions of Saint Paul",
+            ],
             death: "",
             refs: [
                 (
@@ -472,7 +516,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "timothy",
+            tag: "timothy titus",
             has_eve: false,
             date_cal: Fixed(
                 month: 1,
@@ -501,7 +545,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "lydia",
+            tag: "lydia dorcas phoebe",
             has_eve: false,
             date_cal: Fixed(
                 month: 1,
@@ -511,10 +555,11 @@
         ),
         (
             title: "Thomas Aquinas",
-            description: "Priest and Friar",
+            description: "Priest and Friar, 1274",
             main: [],
             other: [
                 "Priest and Friar",
+                "1274",
             ],
             death: "1274",
             refs: [],
@@ -529,10 +574,11 @@
         ),
         (
             title: "Andrei Rublev",
-            description: "Monk and Iconographer",
+            description: "Monk and Iconographer, 1430",
             main: [],
             other: [
                 "Monk and Iconographer",
+                "1430",
             ],
             death: "1430",
             refs: [],
@@ -547,9 +593,11 @@
         ),
         (
             title: "Charles, King and Martyr",
-            description: "",
+            description: "1649",
             main: [],
-            other: [],
+            other: [
+                "1649",
+            ],
             death: "1649",
             refs: [],
             class: Commemoration,
@@ -562,11 +610,14 @@
             transfer: Normal,
         ),
         (
-            title: "Juan Bosco, Priest, 1888. Samuel Shoemaker, Priest and Evangelist, 1963",
-            description: "",
+            title: "Juan Bosco",
+            description: "Priest, 1888.",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Priest",
+                "1888.",
+            ],
+            death: "1888.",
             refs: [
                 (
                     website: Wikipedia,
@@ -584,11 +635,28 @@
             transfer: Normal,
         ),
         (
+            title: "31Samuel Shoemaker",
+            description: "Priest and Evangelist, 1963",
+            main: [],
+            other: [
+                "Priest and Evangelist",
+                "1963",
+            ],
+            death: "",
+            refs: [],
+            class: Commemoration,
+            tag: "samuel shoemaker",
+            has_eve: false,
+            date_cal: Easter,
+            transfer: Normal,
+        ),
+        (
             title: "Brigid (Bride)",
-            description: "Abbess",
+            description: "Abbess, 523",
             main: [],
             other: [
                 "Abbess",
+                "523",
             ],
             death: "523",
             refs: [
@@ -599,7 +667,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "brigid",
+            tag: "brigid of kildare",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -630,11 +698,13 @@
             transfer: Normal,
         ),
         (
-            title: "The Dorchester Chaplains: Lieutenant George Fox, Lieutenant Alexander D. Goode, Lieutenant Clark V. Poling, and Lieutenant John P. Washington, 1943",
-            description: "",
+            title: "The Dorchester Chaplains: Lieutenant George Fox, Lieutenant Alexander D. Goode, Lieutenant Clark V. Poling, and Lieutenant John P. Washington",
+            description: "1943",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "1943",
+            ],
+            death: "1943",
             refs: [
                 (
                     website: Wikipedia,
@@ -643,7 +713,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "dorchester chaplains: lieutenant george fox",
+            tag: "dorchester chaplains lieutenant george fox lieutenant alexander d goode lieutenant clark v poling lieutenant john p washington",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -653,11 +723,12 @@
         ),
         (
             title: "Anskar",
-            description: "Archbishop of Hamburg, Missionary to Denmark and Sweden",
+            description: "Archbishop of Hamburg, Missionary to Denmark and Sweden, 865",
             main: [],
             other: [
                 "Archbishop of Hamburg",
                 "Missionary to Denmark and Sweden",
+                "865",
             ],
             death: "865",
             refs: [
@@ -692,7 +763,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "roger williams",
+            tag: "roger williams anne hutchinson",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -702,9 +773,11 @@
         ),
         (
             title: "The Martyrs of Japan",
-            description: "",
+            description: "1597",
             main: [],
-            other: [],
+            other: [
+                "1597",
+            ],
             death: "1597",
             refs: [
                 (
@@ -714,7 +787,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "martyrs of japan",
+            tag: "of japan",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -740,10 +813,11 @@
         ),
         (
             title: "Scholastica of Nursia",
-            description: "Monastic",
+            description: "Monastic, 543",
             main: [],
             other: [
                 "Monastic",
+                "543",
             ],
             death: "543",
             refs: [
@@ -764,10 +838,11 @@
         ),
         (
             title: "Frances Jane (Fanny) Van Alstyne Crosby",
-            description: "Hymnwriter",
+            description: "Hymnwriter, 1915",
             main: [],
             other: [
                 "Hymnwriter",
+                "1915",
             ],
             death: "1915",
             refs: [
@@ -778,7 +853,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "frances jane van alstyne crosby",
+            tag: "frances jane fanny van alstyne crosby",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -788,10 +863,11 @@
         ),
         (
             title: "Charles Freer Andrews",
-            description: "Priest and “Friend of the Poor” in India",
+            description: "Priest and “Friend of the Poor” in India, 1940",
             main: [],
             other: [
                 "Priest and “Friend of the Poor” in India",
+                "1940",
             ],
             death: "1940",
             refs: [],
@@ -806,10 +882,11 @@
         ),
         (
             title: "Absalom Jones",
-            description: "Priest",
+            description: "Priest, 1818",
             main: [],
             other: [
                 "Priest",
+                "1818",
             ],
             death: "1818",
             refs: [],
@@ -824,10 +901,12 @@
         ),
         (
             title: "Cyril, Monk, and Methodius, Bishop",
-            description: "Missionaries to the Slavs",
+            description: "Missionaries to the Slavs, 869, 885",
             main: [],
             other: [
                 "Missionaries to the Slavs",
+                "869",
+                "885",
             ],
             death: "885",
             refs: [
@@ -843,7 +922,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "cyril",
+            tag: "cyril methodius",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -853,10 +932,11 @@
         ),
         (
             title: "Thomas Bray",
-            description: "Priest and Missionary",
+            description: "Priest and Missionary, 1730",
             main: [],
             other: [
                 "Priest and Missionary",
+                "1730",
             ],
             death: "1730",
             refs: [],
@@ -871,10 +951,11 @@
         ),
         (
             title: "Charles Todd Quintard",
-            description: "Bishop of Tennessee",
+            description: "Bishop of Tennessee, 1898",
             main: [],
             other: [
                 "Bishop of Tennessee",
+                "1898",
             ],
             death: "1898",
             refs: [
@@ -895,18 +976,19 @@
         ),
         (
             title: "Janani Luwum",
-            description: "Archbishop of Uganda, and Martyr",
+            description: "Archbishop of Uganda, and Martyr, 1977",
             main: [
                 Martyr,
             ],
             other: [
                 "Archbishop of Uganda",
                 "and Martyr",
+                "1977",
             ],
             death: "1977",
             refs: [],
             class: Commemoration,
-            tag: "janani luwum",
+            tag: "of uganda",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -916,9 +998,11 @@
         ),
         (
             title: "Martin Luther",
-            description: "",
+            description: "1546",
             main: [],
-            other: [],
+            other: [
+                "1546",
+            ],
             death: "1546",
             refs: [],
             class: Commemoration,
@@ -932,10 +1016,11 @@
         ),
         (
             title: "Frederick Douglass",
-            description: "Prophetic Witness",
+            description: "Prophetic Witness, 1895",
             main: [],
             other: [
                 "Prophetic Witness",
+                "1895",
             ],
             death: "1895",
             refs: [],
@@ -950,10 +1035,11 @@
         ),
         (
             title: "John Henry Newman",
-            description: "priest and theologian",
+            description: "priest and theologian, 1890",
             main: [],
             other: [
                 "priest and theologian",
+                "1890",
             ],
             death: "1890",
             refs: [],
@@ -968,10 +1054,11 @@
         ),
         (
             title: "Eric Liddell",
-            description: "Missionary to China",
+            description: "Missionary to China, 1945",
             main: [],
             other: [
                 "Missionary to China",
+                "1945",
             ],
             death: "1945",
             refs: [],
@@ -986,12 +1073,13 @@
         ),
         (
             title: "Polycarp",
-            description: "Bishop and Martyr of Smyrna",
+            description: "Bishop and Martyr of Smyrna, 156",
             main: [
                 Martyr,
             ],
             other: [
                 "Bishop and Martyr of Smyrna",
+                "156",
             ],
             death: "156",
             refs: [],
@@ -1028,10 +1116,11 @@
         ),
         (
             title: "John Roberts",
-            description: "Priest",
+            description: "Priest, 1949",
             main: [],
             other: [
                 "Priest",
+                "1949",
             ],
             death: "1949",
             refs: [
@@ -1052,10 +1141,11 @@
         ),
         (
             title: "Emily Malbone Morgan",
-            description: "Prophetic Witness",
+            description: "Prophetic Witness, 1937",
             main: [],
             other: [
                 "Prophetic Witness",
+                "1937",
             ],
             death: "1937",
             refs: [],
@@ -1070,10 +1160,11 @@
         ),
         (
             title: "George Herbert",
-            description: "priest",
+            description: "priest, 1633",
             main: [],
             other: [
                 "priest",
+                "1633",
             ],
             death: "1633",
             refs: [],
@@ -1102,7 +1193,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "anna julia haywood cooper",
+            tag: "anna julia haywood cooper elizabeth evelyn wright",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -1112,11 +1203,12 @@
         ),
         (
             title: "David",
-            description: "Bishop of Menevia, Wales",
+            description: "Bishop of Menevia, Wales, c. 544",
             main: [],
             other: [
                 "Bishop of Menevia",
                 "Wales",
+                "c. 544",
             ],
             death: "c. 544",
             refs: [
@@ -1137,10 +1229,11 @@
         ),
         (
             title: "Chad",
-            description: "Bishop of Lichfield",
+            description: "Bishop of Lichfield, 672",
             main: [],
             other: [
                 "Bishop of Lichfield",
+                "672",
             ],
             death: "672",
             refs: [
@@ -1161,10 +1254,12 @@
         ),
         (
             title: "John and Charles Wesley",
-            description: "Priests",
+            description: "Priests, 1791, 1788",
             main: [],
             other: [
                 "Priests",
+                "1791",
+                "1788",
             ],
             death: "1788",
             refs: [
@@ -1175,7 +1270,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "john and charles wesley",
+            tag: "john charles wesley",
             has_eve: false,
             date_cal: Fixed(
                 month: 3,
@@ -1185,10 +1280,11 @@
         ),
         (
             title: "Paul Cuffee",
-            description: "Witness to the Faith among the Shinnecock",
+            description: "Witness to the Faith among the Shinnecock, 1812",
             main: [],
             other: [
                 "Witness to the Faith among the Shinnecock",
+                "1812",
             ],
             death: "1812",
             refs: [
@@ -1224,7 +1320,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "william w. mayo",
+            tag: "william w mayo charles menninger",
             has_eve: false,
             date_cal: Fixed(
                 month: 3,
@@ -1234,12 +1330,13 @@
         ),
         (
             title: "Perpetua & Felicity and their Companion Martyrs",
-            description: "Martyrs at Carthage",
+            description: "Martyrs at Carthage, 203",
             main: [
                 Martyr,
             ],
             other: [
                 "Martyrs at Carthage",
+                "203",
             ],
             death: "203",
             refs: [
@@ -1260,10 +1357,11 @@
         ),
         (
             title: "Geoffrey Anketell Studdert Kennedy",
-            description: "Priest",
+            description: "Priest, 1929",
             main: [],
             other: [
                 "Priest",
+                "1929",
             ],
             death: "1929",
             refs: [],
@@ -1278,10 +1376,11 @@
         ),
         (
             title: "Gregory",
-            description: "Bishop of Nyssa",
+            description: "Bishop of Nyssa, c. 394",
             main: [],
             other: [
                 "Bishop of Nyssa",
+                "c. 394",
             ],
             death: "c. 394",
             refs: [
@@ -1302,10 +1401,11 @@
         ),
         (
             title: "Gregory the Great",
-            description: "Bishop of Rome",
+            description: "Bishop of Rome, 604",
             main: [],
             other: [
                 "Bishop of Rome",
+                "604",
             ],
             death: "604",
             refs: [
@@ -1344,10 +1444,11 @@
         ),
         (
             title: "Patrick",
-            description: "Bishop and Missionary of Ireland",
+            description: "Bishop and Missionary of Ireland, 461",
             main: [],
             other: [
                 "Bishop and Missionary of Ireland",
+                "461",
             ],
             death: "461",
             refs: [
@@ -1368,10 +1469,11 @@
         ),
         (
             title: "Cyril",
-            description: "Bishop of Jerusalem",
+            description: "Bishop of Jerusalem, 386",
             main: [],
             other: [
                 "Bishop of Jerusalem",
+                "386",
             ],
             death: "386",
             refs: [
@@ -1408,10 +1510,11 @@
         ),
         (
             title: "Thomas Ken",
-            description: "Bishop of Bath and Wells",
+            description: "Bishop of Bath and Wells, 1711",
             main: [],
             other: [
                 "Bishop of Bath and Wells",
+                "1711",
             ],
             death: "1711",
             refs: [],
@@ -1426,12 +1529,13 @@
         ),
         (
             title: "Thomas Cranmer",
-            description: "Archbishop of Canterbury and Martyr",
+            description: "Archbishop of Canterbury and Martyr, 1556",
             main: [
                 Martyr,
             ],
             other: [
                 "Archbishop of Canterbury and Martyr",
+                "1556",
             ],
             death: "1556",
             refs: [],
@@ -1446,10 +1550,11 @@
         ),
         (
             title: "James De Koven",
-            description: "Priest",
+            description: "Priest, 1879",
             main: [],
             other: [
                 "Priest",
+                "1879",
             ],
             death: "1879",
             refs: [
@@ -1470,10 +1575,11 @@
         ),
         (
             title: "Gregory the Illuminator",
-            description: "Bishop and Missionary of Armenia",
+            description: "Bishop and Missionary of Armenia, c. 332",
             main: [],
             other: [
                 "Bishop and Missionary of Armenia",
+                "c. 332",
             ],
             death: "c. 332",
             refs: [],
@@ -1488,10 +1594,11 @@
         ),
         (
             title: "Óscar Romero",
-            description: "Archbishop of San Salvador",
+            description: "Archbishop of San Salvador, 1980",
             main: [],
             other: [
                 "Archbishop of San Salvador",
+                "1980",
             ],
             death: "1980",
             refs: [],
@@ -1528,10 +1635,11 @@
         ),
         (
             title: "Richard Allen",
-            description: "First Bishop of the African Methodist Episcopal Church",
+            description: "First Bishop of the African Methodist Episcopal Church, 1831",
             main: [],
             other: [
                 "First Bishop of the African Methodist Episcopal Church",
+                "1831",
             ],
             death: "1831",
             refs: [
@@ -1552,10 +1660,11 @@
         ),
         (
             title: "Charles Henry Brent",
-            description: "Bishop of the Philippines, and of Western New York",
+            description: "Bishop of the Philippines, and of Western New York, 1929",
             main: [],
             other: [
                 "Bishop of the Philippines, and of Western New York",
+                "1929",
             ],
             death: "1929",
             refs: [],
@@ -1570,10 +1679,11 @@
         ),
         (
             title: "James Solomon Russell",
-            description: "Priest",
+            description: "Priest, 1935",
             main: [],
             other: [
                 "Priest",
+                "1935",
             ],
             death: "1935",
             refs: [],
@@ -1588,10 +1698,11 @@
         ),
         (
             title: "John Keble",
-            description: "Priest",
+            description: "Priest, 1866",
             main: [],
             other: [
                 "Priest",
+                "1866",
             ],
             death: "1866",
             refs: [],
@@ -1606,10 +1717,11 @@
         ),
         (
             title: "Innocent of Alaska",
-            description: "Bishop",
+            description: "Bishop, 1879",
             main: [],
             other: [
                 "Bishop",
+                "1879",
             ],
             death: "1879",
             refs: [],
@@ -1624,10 +1736,11 @@
         ),
         (
             title: "John Donne",
-            description: "Priest",
+            description: "Priest, 1631",
             main: [],
             other: [
                 "Priest",
+                "1631",
             ],
             death: "1631",
             refs: [],
@@ -1642,10 +1755,11 @@
         ),
         (
             title: "Frederick Denison Maurice",
-            description: "Priest",
+            description: "Priest, 1872",
             main: [],
             other: [
                 "Priest",
+                "1872",
             ],
             death: "1872",
             refs: [],
@@ -1660,10 +1774,11 @@
         ),
         (
             title: "James Lloyd Breck",
-            description: "Priest",
+            description: "Priest, 1876",
             main: [],
             other: [
                 "Priest",
+                "1876",
             ],
             death: "1876",
             refs: [],
@@ -1678,10 +1793,11 @@
         ),
         (
             title: "Richard",
-            description: "Bishop of Chichester",
+            description: "Bishop of Chichester, 1253",
             main: [],
             other: [
                 "Bishop of Chichester",
+                "1253",
             ],
             death: "1253",
             refs: [
@@ -1702,16 +1818,17 @@
         ),
         (
             title: "Martin Luther King Jr.",
-            description: "Pastor, Civil Rights Leader",
+            description: "Pastor, Civil Rights Leader, 1968",
             main: [],
             other: [
                 "Pastor",
                 "Civil Rights Leader",
+                "1968",
             ],
             death: "1968",
             refs: [],
             class: Commemoration,
-            tag: "martin luther king jr.",
+            tag: "martin luther king jr",
             has_eve: false,
             date_cal: Fixed(
                 month: 4,
@@ -1721,10 +1838,11 @@
         ),
         (
             title: "Pandita Mary Ramabai",
-            description: "Prophetic Witness and Evangelist in India",
+            description: "Prophetic Witness and Evangelist in India, 1922",
             main: [],
             other: [
                 "Prophetic Witness and Evangelist in India",
+                "1922",
             ],
             death: "1922",
             refs: [],
@@ -1739,15 +1857,16 @@
         ),
         (
             title: "Daniel G. C. Wu",
-            description: "Priest and Missionary among Chinese Americans",
+            description: "Priest and Missionary among Chinese Americans, 1956",
             main: [],
             other: [
                 "Priest and Missionary among Chinese Americans",
+                "1956",
             ],
             death: "1956",
             refs: [],
             class: Commemoration,
-            tag: "daniel g. c. wu",
+            tag: "daniel g c wu",
             has_eve: false,
             date_cal: Fixed(
                 month: 4,
@@ -1757,10 +1876,11 @@
         ),
         (
             title: "Tikhon",
-            description: "Patriarch of Russia and Confessor",
+            description: "Patriarch of Russia and Confessor, 1925",
             main: [],
             other: [
                 "Patriarch of Russia and Confessor",
+                "1925",
             ],
             death: "1925",
             refs: [],
@@ -1781,7 +1901,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "william augustus muhlenberg",
+            tag: "william augustus muhlenberg anne ayres religious",
             has_eve: false,
             date_cal: Fixed(
                 month: 4,
@@ -1791,12 +1911,13 @@
         ),
         (
             title: "Dietrich Bonhoeffer",
-            description: "Theologian and Martyr",
+            description: "Theologian and Martyr, 1945",
             main: [
                 Martyr,
             ],
             other: [
                 "Theologian and Martyr",
+                "1945",
             ],
             death: "1945",
             refs: [],
@@ -1810,11 +1931,14 @@
             transfer: Normal,
         ),
         (
-            title: "William Law, Priest, 1761. Pierre Teilhard de Chardin, Scientist and Military Chaplain, 1955",
-            description: "",
+            title: "William Law",
+            description: "Priest, 1761",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Priest",
+                "1761",
+            ],
+            death: "1761",
             refs: [],
             class: Commemoration,
             tag: "william law",
@@ -1826,11 +1950,31 @@
             transfer: Normal,
         ),
         (
+            title: "Pierre Teilhard de Chardin",
+            description: "Scientist and Military Chaplain, 1955",
+            main: [],
+            other: [
+                "Scientist and Military Chaplain",
+                "1955",
+            ],
+            death: "1955",
+            refs: [],
+            class: Commemoration,
+            tag: "pierre teilhard de chardin",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 4,
+                day: 10,
+            ),
+            transfer: Normal,
+        ),
+        (
             title: "George Augustus Selwyn",
-            description: "Bishop of New Zealand, and of Lichfield",
+            description: "Bishop of New Zealand, and of Lichfield, 1878",
             main: [],
             other: [
                 "Bishop of New Zealand, and of Lichfield",
+                "1878",
             ],
             death: "1878",
             refs: [],
@@ -1845,10 +1989,11 @@
         ),
         (
             title: "Adoniram Judson",
-            description: "Missionary to Burma",
+            description: "Missionary to Burma, 1850",
             main: [],
             other: [
                 "Missionary to Burma",
+                "1850",
             ],
             death: "1850",
             refs: [],
@@ -1871,7 +2016,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "edward thomas demby",
+            tag: "edward thomas demby henry beard delany",
             has_eve: false,
             date_cal: Fixed(
                 month: 4,
@@ -1898,7 +2043,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "damien",
+            tag: "damien leper marianne religious of molokai",
             has_eve: false,
             date_cal: Fixed(
                 month: 4,
@@ -1908,10 +2053,11 @@
         ),
         (
             title: "Mary (Molly) Brant (Konwatsijayenni)",
-            description: "Witness to the Faith among the Mohawks",
+            description: "Witness to the Faith among the Mohawks, 1796",
             main: [],
             other: [
                 "Witness to the Faith among the Mohawks",
+                "1796",
             ],
             death: "1796",
             refs: [
@@ -1932,13 +2078,14 @@
         ),
         (
             title: "Alphege",
-            description: "Archbishop of Canterbury, and Martyr",
+            description: "Archbishop of Canterbury, and Martyr, 1012",
             main: [
                 Martyr,
             ],
             other: [
                 "Archbishop of Canterbury",
                 "and Martyr",
+                "1012",
             ],
             death: "1012",
             refs: [],
@@ -1953,10 +2100,11 @@
         ),
         (
             title: "Anselm",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 1109",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "1109",
             ],
             death: "1109",
             refs: [
@@ -1983,7 +2131,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "john muir",
+            tag: "john muir naturalist writer hudson stuck environmentalist",
             has_eve: false,
             date_cal: Fixed(
                 month: 4,
@@ -1992,11 +2140,16 @@
             transfer: Normal,
         ),
         (
-            title: "George, Soldier and Martyr, c. 304. Toyohiko Kagawa, Prophetic Witness in Japan, 1960",
-            description: "",
-            main: [],
-            other: [],
-            death: "",
+            title: "George",
+            description: "Soldier and Martyr, c. 304",
+            main: [
+                Martyr,
+            ],
+            other: [
+                "Soldier and Martyr",
+                "c. 304",
+            ],
+            death: "c. 304",
             refs: [
                 (
                     website: Wikipedia,
@@ -2012,6 +2165,25 @@
                 day: 23,
             ),
             transfer: George,
+        ),
+        (
+            title: "Toyohiko Kagawa",
+            description: "Prophetic Witness in Japan, 1960",
+            main: [],
+            other: [
+                "Prophetic Witness in Japan",
+                "1960",
+            ],
+            death: "1960",
+            refs: [],
+            class: Commemoration,
+            tag: "toyohiko kagawa",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 4,
+                day: 23,
+            ),
+            transfer: Normal,
         ),
         (
             title: "Genocide Remembrance",
@@ -2053,10 +2225,11 @@
         ),
         (
             title: "Robert Hunt",
-            description: "Priest and First Chaplain at Jamestown",
+            description: "Priest and First Chaplain at Jamestown, 1607",
             main: [],
             other: [
                 "Priest and First Chaplain at Jamestown",
+                "1607",
             ],
             death: "1607",
             refs: [
@@ -2077,10 +2250,11 @@
         ),
         (
             title: "Christina Rossetti",
-            description: "Poet",
+            description: "Poet, 1894",
             main: [],
             other: [
                 "Poet",
+                "1894",
             ],
             death: "1894",
             refs: [],
@@ -2095,9 +2269,11 @@
         ),
         (
             title: "Catherine of Siena",
-            description: "",
+            description: "1380",
             main: [],
-            other: [],
+            other: [
+                "1380",
+            ],
             death: "1380",
             refs: [],
             class: Commemoration,
@@ -2111,10 +2287,11 @@
         ),
         (
             title: "Sarah Josepha Buell Hale",
-            description: "Editor and Prophetic Witness",
+            description: "Editor and Prophetic Witness, 1879",
             main: [],
             other: [
                 "Editor and Prophetic Witness",
+                "1879",
             ],
             death: "1879",
             refs: [],
@@ -2148,7 +2325,7 @@
                 ),
             ],
             class: Festival,
-            tag: "philip and james",
+            tag: "philip james",
             has_eve: false,
             date_cal: Fixed(
                 month: 5,
@@ -2158,10 +2335,11 @@
         ),
         (
             title: "Athanasius",
-            description: "Bishop of Alexandria",
+            description: "Bishop of Alexandria, 373",
             main: [],
             other: [
                 "Bishop of Alexandria",
+                "373",
             ],
             death: "373",
             refs: [
@@ -2182,10 +2360,11 @@
         ),
         (
             title: "Monnica of Hippo",
-            description: "Mother of Augustine of Hippo",
+            description: "Mother of Augustine of Hippo, 387",
             main: [],
             other: [
                 "Mother of Augustine of Hippo",
+                "387",
             ],
             death: "387",
             refs: [
@@ -2206,10 +2385,11 @@
         ),
         (
             title: "Harriet Starr Cannon",
-            description: "Religious",
+            description: "Religious, 1896",
             main: [],
             other: [
                 "Religious",
+                "1896",
             ],
             death: "1896",
             refs: [],
@@ -2224,9 +2404,11 @@
         ),
         (
             title: "Dame Julian of Norwich",
-            description: "",
+            description: "c. 1417",
             main: [],
-            other: [],
+            other: [
+                "c. 1417",
+            ],
             death: "c. 1417",
             refs: [],
             class: Commemoration,
@@ -2240,10 +2422,11 @@
         ),
         (
             title: "Gregory of Nazianzus",
-            description: "Bishop of Constantinople",
+            description: "Bishop of Constantinople, 389",
             main: [],
             other: [
                 "Bishop of Constantinople",
+                "389",
             ],
             death: "389",
             refs: [],
@@ -2258,10 +2441,11 @@
         ),
         (
             title: "Nicolaus Ludwig von Zinzendorf",
-            description: "Prophetic Witness",
+            description: "Prophetic Witness, 1760",
             main: [],
             other: [
                 "Prophetic Witness",
+                "1760",
             ],
             death: "1760",
             refs: [
@@ -2282,10 +2466,11 @@
         ),
         (
             title: "Frances Perkins",
-            description: "Public Servant and Prophetic Witness",
+            description: "Public Servant and Prophetic Witness, 1965",
             main: [],
             other: [
                 "Public Servant and Prophetic Witness",
+                "1965",
             ],
             death: "1965",
             refs: [],
@@ -2312,7 +2497,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "martyrs of sudan",
+            tag: "of sudan",
             has_eve: false,
             date_cal: Fixed(
                 month: 5,
@@ -2322,10 +2507,11 @@
         ),
         (
             title: "William Hobart Hare",
-            description: "Bishop of Niobrara, and of South Dakota",
+            description: "Bishop of Niobrara, and of South Dakota, 1909",
             main: [],
             other: [
                 "Bishop of Niobrara, and of South Dakota",
+                "1909",
             ],
             death: "1909",
             refs: [],
@@ -2340,10 +2526,11 @@
         ),
         (
             title: "Dunstan",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 988",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "988",
             ],
             death: "988",
             refs: [],
@@ -2358,11 +2545,12 @@
         ),
         (
             title: "Alcuin",
-            description: "Deacon, and Abbot of Tours",
+            description: "Deacon, and Abbot of Tours, 804",
             main: [],
             other: [
                 "Deacon",
                 "and Abbot of Tours",
+                "804",
             ],
             death: "804",
             refs: [],
@@ -2377,10 +2565,11 @@
         ),
         (
             title: "John Eliot",
-            description: "Missionary among the Algonquin",
+            description: "Missionary among the Algonquin, 1690",
             main: [],
             other: [
                 "Missionary among the Algonquin",
+                "1690",
             ],
             death: "1690",
             refs: [
@@ -2409,7 +2598,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "nicolaus copernicus",
+            tag: "nicolaus copernicus johannes kepler",
             has_eve: false,
             date_cal: Fixed(
                 month: 5,
@@ -2419,10 +2608,11 @@
         ),
         (
             title: "Jackson Kemper",
-            description: "First Missionary Bishop in the United States",
+            description: "First Missionary Bishop in the United States, 1870",
             main: [],
             other: [
                 "First Missionary Bishop in the United States",
+                "1870",
             ],
             death: "1870",
             refs: [],
@@ -2437,12 +2627,13 @@
         ),
         (
             title: "Bede",
-            description: "the Venerable, Priest, and Monk of Jarrow",
+            description: "the Venerable, Priest, and Monk of Jarrow, 735",
             main: [],
             other: [
                 "the Venerable",
                 "Priest",
                 "and Monk of Jarrow",
+                "735",
             ],
             death: "735",
             refs: [],
@@ -2457,10 +2648,11 @@
         ),
         (
             title: "Augustine",
-            description: "First Archbishop of Canterbury",
+            description: "First Archbishop of Canterbury, 605",
             main: [],
             other: [
                 "First Archbishop of Canterbury",
+                "605",
             ],
             death: "605",
             refs: [
@@ -2481,10 +2673,11 @@
         ),
         (
             title: "Bertha and Ethelbert",
-            description: "Queen and King of Kent",
+            description: "Queen and King of Kent, 616",
             main: [],
             other: [
                 "Queen and King of Kent",
+                "616",
             ],
             death: "616",
             refs: [
@@ -2500,7 +2693,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "bertha and ethelbert",
+            tag: "bertha ethelbert",
             has_eve: false,
             date_cal: Fixed(
                 month: 5,
@@ -2510,10 +2703,11 @@
         ),
         (
             title: "John Calvin",
-            description: "Theologian",
+            description: "Theologian, 1564",
             main: [],
             other: [
                 "Theologian",
+                "1564",
             ],
             death: "1564",
             refs: [],
@@ -2528,10 +2722,11 @@
         ),
         (
             title: "Jeanne d’Arc (Joan of Arc)",
-            description: "Mystic and Soldier",
+            description: "Mystic and Soldier, 1431",
             main: [],
             other: [
                 "Mystic and Soldier",
+                "1431",
             ],
             death: "1431",
             refs: [],
@@ -2568,12 +2763,13 @@
         ),
         (
             title: "Justin",
-            description: "Martyr at Rome",
+            description: "Martyr at Rome, c. 167",
             main: [
                 Martyr,
             ],
             other: [
                 "Martyr at Rome",
+                "c. 167",
             ],
             death: "c. 167",
             refs: [
@@ -2594,9 +2790,11 @@
         ),
         (
             title: "The Martyrs of Lyons",
-            description: "",
+            description: "177",
             main: [],
-            other: [],
+            other: [
+                "177",
+            ],
             death: "177",
             refs: [
                 (
@@ -2606,7 +2804,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "martyrs of lyons",
+            tag: "of lyon",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -2616,9 +2814,11 @@
         ),
         (
             title: "The Martyrs of Uganda",
-            description: "",
+            description: "1886",
             main: [],
-            other: [],
+            other: [
+                "1886",
+            ],
             death: "1886",
             refs: [
                 (
@@ -2628,7 +2828,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "martyrs of uganda",
+            tag: "of uganda",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -2638,15 +2838,16 @@
         ),
         (
             title: "Pope John XXIII (Angelo Giuseppe Roncalli)",
-            description: "Bishop of Rome",
+            description: "Bishop of Rome, 1963<ref>http://www.satucket.com/lectionary/john_xxiii.htm</ref><ref>https://liturgyandmusic.wordpress.com/2011/06/04/june-4-john-xxiii-angelo-giuseppe-roncalli-bishop-of-rome-1963/</ref>",
             main: [],
             other: [
                 "Bishop of Rome",
+                "1963<ref>http://www.satucket.com/lectionary/john_xxiii.htm</ref><ref>https://liturgyandmusic.wordpress.com/2011/06/04/june-4-john-xxiii-angelo-giuseppe-roncalli-bishop-of-rome-1963/</ref>",
             ],
             death: "1963<ref>http://www.satucket.com/lectionary/john_xxiii.htm</ref><ref>https://liturgyandmusic.wordpress.com/2011/06/04/june-4-john-xxiii-angelo-giuseppe-roncalli-bishop-of-rome-1963/</ref>",
             refs: [],
             class: Commemoration,
-            tag: "pope john xxiii",
+            tag: "john xxiii",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -2656,7 +2857,7 @@
         ),
         (
             title: "Boniface",
-            description: "Archbishop of Mainz, Missionary to Germany, and Martyr",
+            description: "Archbishop of Mainz, Missionary to Germany, and Martyr, 754",
             main: [
                 Martyr,
             ],
@@ -2664,6 +2865,7 @@
                 "Archbishop of Mainz",
                 "Missionary to Germany",
                 "and Martyr",
+                "754",
             ],
             death: "754",
             refs: [
@@ -2684,10 +2886,11 @@
         ),
         (
             title: "Ini Kopuria",
-            description: "Founder of the Melanesian Brotherhood",
+            description: "Founder of the Melanesian Brotherhood, 1945",
             main: [],
             other: [
                 "Founder of the Melanesian Brotherhood",
+                "1945",
             ],
             death: "1945",
             refs: [],
@@ -2702,9 +2905,11 @@
         ),
         (
             title: "The Pioneers of the Episcopal Anglican Church of Brazil",
-            description: "",
+            description: "1890",
             main: [],
-            other: [],
+            other: [
+                "1890",
+            ],
             death: "1890",
             refs: [
                 (
@@ -2724,10 +2929,11 @@
         ),
         (
             title: "Roland Allen",
-            description: "Mission Strategist",
+            description: "Mission Strategist, 1947",
             main: [],
             other: [
                 "Mission Strategist",
+                "1947",
             ],
             death: "1947",
             refs: [],
@@ -2742,10 +2948,11 @@
         ),
         (
             title: "Columba",
-            description: "Abbot of Iona",
+            description: "Abbot of Iona, 597",
             main: [],
             other: [
                 "Abbot of Iona",
+                "597",
             ],
             death: "597",
             refs: [],
@@ -2760,10 +2967,11 @@
         ),
         (
             title: "Ephrem of Edessa, Syria",
-            description: "Deacon",
+            description: "Deacon, 373",
             main: [],
             other: [
                 "Deacon",
+                "373",
             ],
             death: "373",
             refs: [
@@ -2806,10 +3014,11 @@
         ),
         (
             title: "Enmegahbowh",
-            description: "Priest and Missionary",
+            description: "Priest and Missionary, 1902",
             main: [],
             other: [
                 "Priest and Missionary",
+                "1902",
             ],
             death: "1902",
             refs: [],
@@ -2824,10 +3033,11 @@
         ),
         (
             title: "Gilbert Keith Chesterton",
-            description: "Apologist and Writer",
+            description: "Apologist and Writer, 1936",
             main: [],
             other: [
                 "Apologist and Writer",
+                "1936",
             ],
             death: "1936",
             refs: [
@@ -2848,10 +3058,11 @@
         ),
         (
             title: "Basil the Great",
-            description: "Bishop of Caesarea",
+            description: "Bishop of Caesarea, 379",
             main: [],
             other: [
                 "Bishop of Caesarea",
+                "379",
             ],
             death: "379",
             refs: [
@@ -2862,7 +3073,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "basil the great",
+            tag: "basil",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -2872,9 +3083,11 @@
         ),
         (
             title: "Evelyn Underhill",
-            description: "",
+            description: "Theologian and Mystic 1941",
             main: [],
-            other: [],
+            other: [
+                "Theologian and Mystic 1941",
+            ],
             death: "Theologian and Mystic 1941",
             refs: [],
             class: Commemoration,
@@ -2888,15 +3101,16 @@
         ),
         (
             title: "George Berkeley, 1753, and Joseph Butler",
-            description: "Bishops and Theologians",
+            description: "1752, Bishops and Theologians",
             main: [],
             other: [
+                "1752",
                 "Bishops and Theologians",
             ],
             death: "1752",
             refs: [],
             class: Commemoration,
-            tag: "george berkeley",
+            tag: "joseph butler",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -2906,12 +3120,13 @@
         ),
         (
             title: "Bernard Mizeki",
-            description: "Catechist and Martyr in Rhodesia",
+            description: "Catechist and Martyr in Rhodesia, 1896",
             main: [
                 Martyr,
             ],
             other: [
                 "Catechist and Martyr in Rhodesia",
+                "1896",
             ],
             death: "1896",
             refs: [],
@@ -2926,12 +3141,13 @@
         ),
         (
             title: "Alban",
-            description: "First Martyr of Britain",
+            description: "First Martyr of Britain, c. 304",
             main: [
                 Martyr,
             ],
             other: [
                 "First Martyr of Britain",
+                "c. 304",
             ],
             death: "c. 304",
             refs: [
@@ -2964,7 +3180,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "nativity of john the baptist",
+            tag: "birth of john the baptist",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -2974,10 +3190,11 @@
         ),
         (
             title: "James Weldon Johnson",
-            description: "Poet",
+            description: "Poet, 1938",
             main: [],
             other: [
                 "Poet",
+                "1938",
             ],
             death: "1938",
             refs: [],
@@ -2992,10 +3209,11 @@
         ),
         (
             title: "Isabel Florence Hapgood",
-            description: "Ecumenist and Journalist",
+            description: "Ecumenist and Journalist, 1929",
             main: [],
             other: [
                 "Ecumenist and Journalist",
+                "1929",
             ],
             death: "1929",
             refs: [],
@@ -3010,10 +3228,11 @@
         ),
         (
             title: "Cornelius Hill",
-            description: "Priest and Chief among the Oneida",
+            description: "Priest and Chief among the Oneida, 1907",
             main: [],
             other: [
                 "Priest and Chief among the Oneida",
+                "1907",
             ],
             death: "1907",
             refs: [],
@@ -3028,10 +3247,11 @@
         ),
         (
             title: "Irenaeus",
-            description: "Bishop of Lyon",
+            description: "Bishop of Lyon, c. 202",
             main: [],
             other: [
                 "Bishop of Lyon",
+                "c. 202",
             ],
             death: "c. 202",
             refs: [],
@@ -3060,7 +3280,7 @@
                 ),
             ],
             class: Festival,
-            tag: "peter and paul",
+            tag: "peter paul",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -3076,7 +3296,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "harriet beecher stowe",
+            tag: "harriet beecher stowe writer prophetic witness pauli murray lawyer poet author activist first african",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3094,7 +3314,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "walter rauschenbusch",
+            tag: "walter rauschenbusch washington gladden jacob riis",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3126,12 +3346,13 @@
         ),
         (
             title: "Jan Hus",
-            description: "Prophetic Witness and Martyr",
+            description: "Prophetic Witness and Martyr, 1415",
             main: [
                 Martyr,
             ],
             other: [
                 "Prophetic Witness and Martyr",
+                "1415",
             ],
             death: "1415",
             refs: [
@@ -3152,10 +3373,11 @@
         ),
         (
             title: "Benedict of Nursia",
-            description: "Abbot of Monte Cassino",
+            description: "Abbot of Monte Cassino, c. 540",
             main: [],
             other: [
                 "Abbot of Monte Cassino",
+                "c. 540",
             ],
             death: "c. 540",
             refs: [],
@@ -3170,15 +3392,16 @@
         ),
         (
             title: "Nathan Söderblom",
-            description: "Archbishop of Uppsala and Ecumenist",
+            description: "Archbishop of Uppsala and Ecumenist, 1931",
             main: [],
             other: [
                 "Archbishop of Uppsala and Ecumenist",
+                "1931",
             ],
             death: "1931",
             refs: [],
             class: Commemoration,
-            tag: "nathan söderblom",
+            tag: "nathan s derblom",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3188,10 +3411,11 @@
         ),
         (
             title: "Conrad Weiser",
-            description: "Witness to Peace and Reconciliation",
+            description: "Witness to Peace and Reconciliation, 1760",
             main: [],
             other: [
                 "Witness to Peace and Reconciliation",
+                "1760",
             ],
             death: "1760",
             refs: [],
@@ -3206,10 +3430,11 @@
         ),
         (
             title: "Samson Occom",
-            description: "Witness to the Faith in New England",
+            description: "Witness to the Faith in New England, 1792",
             main: [],
             other: [
                 "Witness to the Faith in New England",
+                "1792",
             ],
             death: "1792",
             refs: [],
@@ -3236,7 +3461,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "\"the righteous gentiles\"",
+            tag: "righteous gentiles",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3246,10 +3471,11 @@
         ),
         (
             title: "William White",
-            description: "Bishop of Pennsylvania",
+            description: "Bishop of Pennsylvania, 1836",
             main: [],
             other: [
                 "Bishop of Pennsylvania",
+                "1836",
             ],
             death: "1836",
             refs: [
@@ -3270,15 +3496,16 @@
         ),
         (
             title: "Bartolomé de las Casas",
-            description: "Friar and Missionary to the Indies",
+            description: "Friar and Missionary to the Indies, 1566",
             main: [],
             other: [
                 "Friar and Missionary to the Indies",
+                "1566",
             ],
             death: "1566",
             refs: [],
             class: Commemoration,
-            tag: "bartolomé de las casas",
+            tag: "bartolom de las casas",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3287,11 +3514,14 @@
             transfer: Normal,
         ),
         (
-            title: "Macrina, Monastic and Teacher, 379. Adelaide Teague Case, Teacher, 1948",
-            description: "",
+            title: "Macrina",
+            description: "Monastic and Teacher, 379",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Monastic and Teacher",
+                "379",
+            ],
+            death: "379",
             refs: [
                 (
                     website: Wikipedia,
@@ -3300,12 +3530,28 @@
                 ),
             ],
             class: Commemoration,
-            tag: "macrina",
+            tag: "gregory",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
                 day: 19,
             ),
+            transfer: Normal,
+        ),
+        (
+            title: "19Adelaide Teague Case",
+            description: "Teacher, 1948",
+            main: [],
+            other: [
+                "Teacher",
+                "1948",
+            ],
+            death: "",
+            refs: [],
+            class: Commemoration,
+            tag: "adelaide teague case",
+            has_eve: false,
+            date_cal: Easter,
             transfer: Normal,
         ),
         (
@@ -3322,7 +3568,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "elizabeth cady stanton",
+            tag: "elizabeth cady stanton amelia bloomer sojourner truth harriet ross tubman",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3332,10 +3578,11 @@
         ),
         (
             title: "Albert John Luthuli",
-            description: "Prophetic Witness in South Africa",
+            description: "Prophetic Witness in South Africa, 1967",
             main: [],
             other: [
                 "Prophetic Witness in South Africa",
+                "1967",
             ],
             death: "1967",
             refs: [],
@@ -3372,10 +3619,11 @@
         ),
         (
             title: "John Cassian",
-            description: "Abbot at Marseilles",
+            description: "Abbot at Marseilles, 433",
             main: [],
             other: [
                 "Abbot at Marseilles",
+                "433",
             ],
             death: "433",
             refs: [],
@@ -3390,10 +3638,11 @@
         ),
         (
             title: "Thomas a Kempis",
-            description: "Priest",
+            description: "Priest, 1471",
             main: [],
             other: [
                 "Priest",
+                "1471",
             ],
             death: "1471",
             refs: [
@@ -3458,10 +3707,11 @@
         ),
         (
             title: "William Reed Huntington",
-            description: "Priest",
+            description: "Priest, 1909",
             main: [],
             other: [
                 "Priest",
+                "1909",
             ],
             death: "1909",
             refs: [],
@@ -3484,7 +3734,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "johann sebastian bach",
+            tag: "johann sebastian bach george frederick handel henry purcell",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3511,7 +3761,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "mary",
+            tag: "mary martha",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3535,7 +3785,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "william wilberforce",
+            tag: "william wilberforce anthony ashley cooper lord shaftesbury",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -3545,10 +3795,11 @@
         ),
         (
             title: "Ignatius of Loyola",
-            description: "Priest and Monastic",
+            description: "Priest and Monastic, 1556",
             main: [],
             other: [
                 "Priest and Monastic",
+                "1556",
             ],
             death: "1556",
             refs: [],
@@ -3585,10 +3836,11 @@
         ),
         (
             title: "Samuel David Ferguson",
-            description: "Missionary Bishop for West Africa",
+            description: "Missionary Bishop for West Africa, 1916",
             main: [],
             other: [
                 "Missionary Bishop for West Africa",
+                "1916",
             ],
             death: "1916",
             refs: [],
@@ -3615,7 +3867,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "george freeman bragg",
+            tag: "george freeman bragg jr w e b du bois sociologist",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -3631,7 +3883,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "albrecht dürer",
+            tag: "albrecht d rer matthias gr newald lucas cranach the elder artists",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -3669,7 +3921,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "john mason neale",
+            tag: "john mason neale catherine winkworth poet",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -3679,10 +3931,11 @@
         ),
         (
             title: "Dominic",
-            description: "Priest and Friar",
+            description: "Priest and Friar, 1221",
             main: [],
             other: [
                 "Priest and Friar",
+                "1221",
             ],
             death: "1221",
             refs: [
@@ -3703,10 +3956,11 @@
         ),
         (
             title: "Herman of Alaska",
-            description: "Missionary to the Aleut",
+            description: "Missionary to the Aleut, 1837",
             main: [],
             other: [
                 "Missionary to the Aleut",
+                "1837",
             ],
             death: "1837",
             refs: [],
@@ -3721,13 +3975,14 @@
         ),
         (
             title: "Lawrence",
-            description: "Deacon, and Martyr at Rome",
+            description: "Deacon, and Martyr at Rome, 258",
             main: [
                 Martyr,
             ],
             other: [
                 "Deacon",
                 "and Martyr at Rome",
+                "258",
             ],
             death: "258",
             refs: [
@@ -3748,10 +4003,11 @@
         ),
         (
             title: "Clare",
-            description: "Abbess at Assisi",
+            description: "Abbess at Assisi, 1253",
             main: [],
             other: [
                 "Abbess at Assisi",
+                "1253",
             ],
             death: "1253",
             refs: [
@@ -3772,11 +4028,12 @@
         ),
         (
             title: "Florence Nightingale",
-            description: "Nurse, Social Reformer",
+            description: "Nurse, Social Reformer, 1910",
             main: [],
             other: [
                 "Nurse",
                 "Social Reformer",
+                "1910",
             ],
             death: "1910",
             refs: [],
@@ -3791,10 +4048,11 @@
         ),
         (
             title: "Jeremy Taylor",
-            description: "Bishop of Down, Connor, and Dromore",
+            description: "Bishop of Down, Connor, and Dromore, 1667",
             main: [],
             other: [
                 "Bishop of Down, Connor, and Dromore",
+                "1667",
             ],
             death: "1667",
             refs: [],
@@ -3809,10 +4067,11 @@
         ),
         (
             title: "Jonathan Myrick Daniels",
-            description: "Seminarian and Witness for Civil Rights",
+            description: "Seminarian and Witness for Civil Rights, 1965",
             main: [],
             other: [
                 "Seminarian and Witness for Civil Rights",
+                "1965",
             ],
             death: "1965",
             refs: [
@@ -3871,7 +4130,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "samuel johnson",
+            tag: "samuel johnson timothy cutler thomas bradbury chandler",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -3881,10 +4140,11 @@
         ),
         (
             title: "William Porcher DuBose",
-            description: "Priest",
+            description: "Priest, 1918",
             main: [],
             other: [
                 "Priest",
+                "1918",
             ],
             death: "1918",
             refs: [],
@@ -3899,10 +4159,11 @@
         ),
         (
             title: "Bernard",
-            description: "Abbot of Clairvaux",
+            description: "Abbot of Clairvaux, 1153",
             main: [],
             other: [
                 "Abbot of Clairvaux",
+                "1153",
             ],
             death: "1153",
             refs: [
@@ -3931,7 +4192,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "martin de porres",
+            tag: "martin de porres rosa de lima toribio de mogrovejo",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -3980,7 +4241,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "louis",
+            tag: "louis king of france",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -4002,7 +4263,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "thomas gallaudet",
+            tag: "thomas gallaudet henry winter syle",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -4024,7 +4285,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "augustine of hippo",
+            tag: "augustine of hippo moses the black desert father c",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -4034,10 +4295,11 @@
         ),
         (
             title: "John Bunyan",
-            description: "Writer",
+            description: "Writer, 1688",
             main: [],
             other: [
                 "Writer",
+                "1688",
             ],
             death: "1688",
             refs: [],
@@ -4052,11 +4314,12 @@
         ),
         (
             title: "Charles Chapman Grafton",
-            description: "Bishop of Fond du Lac, and Ecumenist",
+            description: "Bishop of Fond du Lac, and Ecumenist, 1912",
             main: [],
             other: [
                 "Bishop of Fond du Lac",
                 "and Ecumenist",
+                "1912",
             ],
             death: "1912",
             refs: [],
@@ -4070,21 +4333,19 @@
             transfer: Normal,
         ),
         (
-            title: "Aidan, Bishop of Lindisfarne, 651. Cuthbert, Bishop of Lindisfarne, 687",
-            description: "",
+            title: "Aidan",
+            description: "Bishop of Lindisfarne, 651",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Bishop of Lindisfarne",
+                "651",
+            ],
+            death: "651",
             refs: [
                 (
                     website: Wikipedia,
                     article: "Aidan of Lindisfarne",
                     description: "Aidan of Lindisfarne",
-                ),
-                (
-                    website: Wikipedia,
-                    article: "Cuthbert of Lindisfarne",
-                    description: "Cuthbert of Lindisfarne",
                 ),
             ],
             class: Commemoration,
@@ -4097,11 +4358,37 @@
             transfer: Normal,
         ),
         (
+            title: "Cuthbert",
+            description: "Bishop of Lindisfarne, 687",
+            main: [],
+            other: [
+                "Bishop of Lindisfarne",
+                "687",
+            ],
+            death: "687",
+            refs: [
+                (
+                    website: Wikipedia,
+                    article: "Cuthbert of Lindisfarne",
+                    description: "Cuthbert of Lindisfarne",
+                ),
+            ],
+            class: Commemoration,
+            tag: "cuthbert",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 8,
+                day: 31,
+            ),
+            transfer: Normal,
+        ),
+        (
             title: "David Pendleton Oakerhater",
-            description: "Deacon and Missionary",
+            description: "Deacon and Missionary, 1931",
             main: [],
             other: [
                 "Deacon and Missionary",
+                "1931",
             ],
             death: "1931",
             refs: [],
@@ -4116,9 +4403,11 @@
         ),
         (
             title: "The Martyrs of New Guinea",
-            description: "",
+            description: "1942",
             main: [],
-            other: [],
+            other: [
+                "1942",
+            ],
             death: "1942",
             refs: [
                 (
@@ -4128,7 +4417,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "martyrs of new guinea",
+            tag: "of new guinea",
             has_eve: false,
             date_cal: Fixed(
                 month: 9,
@@ -4138,10 +4427,11 @@
         ),
         (
             title: "Prudence Crandall",
-            description: "Teacher and Prophetic Witness",
+            description: "Teacher and Prophetic Witness, 1890",
             main: [],
             other: [
                 "Teacher and Prophetic Witness",
+                "1890",
             ],
             death: "1890",
             refs: [],
@@ -4156,9 +4446,11 @@
         ),
         (
             title: "Paul Jones",
-            description: "",
+            description: "1941",
             main: [],
-            other: [],
+            other: [
+                "1941",
+            ],
             death: "1941",
             refs: [
                 (
@@ -4178,10 +4470,11 @@
         ),
         (
             title: "Gregorio Aglipay",
-            description: "Priest and Founder of the Philippine Independent Church",
+            description: "Priest and Founder of the Philippine Independent Church, 1940",
             main: [],
             other: [
                 "Priest and Founder of the Philippine Independent Church",
+                "1940",
             ],
             death: "1940",
             refs: [],
@@ -4196,10 +4489,11 @@
         ),
         (
             title: "Elie Naud",
-            description: "Huguenot Witness to the Faith",
+            description: "Huguenot Witness to the Faith, 1722",
             main: [],
             other: [
                 "Huguenot Witness to the Faith",
+                "1722",
             ],
             death: "1722",
             refs: [],
@@ -4213,14 +4507,49 @@
             transfer: Normal,
         ),
         (
-            title: "Nativity of Mary, Søren Kierkegaard, Teacher and Philosopher, 1855. N. F. S. Grundtvig, Bishop and Hymnwriter, 1872",
+            title: "Nativity of Mary",
             description: "",
             main: [],
             other: [],
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "birth of mary",
+            tag: "mary",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 9,
+                day: 8,
+            ),
+            transfer: Normal,
+        ),
+        (
+            title: "8Søren Kierkegaard",
+            description: "Teacher and Philosopher, 1855",
+            main: [],
+            other: [
+                "Teacher and Philosopher",
+                "1855",
+            ],
+            death: "",
+            refs: [],
+            class: Commemoration,
+            tag: "s ren kierkegaard",
+            has_eve: false,
+            date_cal: Easter,
+            transfer: Normal,
+        ),
+        (
+            title: "N. F. S. Grundtvig",
+            description: "Bishop and Hymnwriter, 1872",
+            main: [],
+            other: [
+                "Bishop and Hymnwriter",
+                "1872",
+            ],
+            death: "1872",
+            refs: [],
+            class: Commemoration,
+            tag: "n f s grundtvig",
             has_eve: false,
             date_cal: Fixed(
                 month: 9,
@@ -4230,9 +4559,11 @@
         ),
         (
             title: "Constance, Nun, and her Companions",
-            description: "",
+            description: "1878",
             main: [],
-            other: [],
+            other: [
+                "1878",
+            ],
             death: "1878",
             refs: [
                 (
@@ -4242,7 +4573,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "constance",
+            tag: "constance nun",
             has_eve: false,
             date_cal: Fixed(
                 month: 9,
@@ -4252,9 +4583,11 @@
         ),
         (
             title: "Alexander Crummell",
-            description: "",
+            description: "1898",
             main: [],
-            other: [],
+            other: [
+                "1898",
+            ],
             death: "1898",
             refs: [],
             class: Commemoration,
@@ -4268,10 +4601,11 @@
         ),
         (
             title: "Harry Thacker Burleigh",
-            description: "Composer",
+            description: "Composer, 1949",
             main: [],
             other: [
                 "Composer",
+                "1949",
             ],
             death: "1949",
             refs: [],
@@ -4286,10 +4620,11 @@
         ),
         (
             title: "John Henry Hobart",
-            description: "Bishop of New York",
+            description: "Bishop of New York, 1830",
             main: [],
             other: [
                 "Bishop of New York",
+                "1830",
             ],
             death: "1830",
             refs: [],
@@ -4304,10 +4639,11 @@
         ),
         (
             title: "John Chrysostom",
-            description: "Bishop of Constantinople",
+            description: "Bishop of Constantinople, 407",
             main: [],
             other: [
                 "Bishop of Constantinople",
+                "407",
             ],
             death: "407",
             refs: [],
@@ -4343,18 +4679,17 @@
             transfer: Normal,
         ),
         (
-            title: "Cyprian, Bishop and Martyr of Carthage, 258. James Chisholm, Priest, 1855",
-            description: "",
-            main: [],
-            other: [],
-            death: "",
-            refs: [
-                (
-                    website: Wikipedia,
-                    article: "James Chisholm (priest)",
-                    description: "James Chisholm (priest)",
-                ),
+            title: "Cyprian",
+            description: "Bishop and Martyr of Carthage, 258",
+            main: [
+                Martyr,
             ],
+            other: [
+                "Bishop and Martyr of Carthage",
+                "258",
+            ],
+            death: "258",
+            refs: [],
             class: Commemoration,
             tag: "cyprian",
             has_eve: false,
@@ -4365,11 +4700,37 @@
             transfer: Normal,
         ),
         (
+            title: "James Chisholm",
+            description: "Priest, 1855",
+            main: [],
+            other: [
+                "Priest",
+                "1855",
+            ],
+            death: "1855",
+            refs: [
+                (
+                    website: Wikipedia,
+                    article: "James Chisholm (priest)",
+                    description: "James Chisholm (priest)",
+                ),
+            ],
+            class: Commemoration,
+            tag: "james chisholm",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 9,
+                day: 15,
+            ),
+            transfer: Normal,
+        ),
+        (
             title: "Ninian",
-            description: "Bishop in Galloway",
+            description: "Bishop in Galloway, c. 430",
             main: [],
             other: [
                 "Bishop in Galloway",
+                "c. 430",
             ],
             death: "c. 430",
             refs: [
@@ -4390,9 +4751,11 @@
         ),
         (
             title: "Hildegard",
-            description: "",
+            description: "1179",
             main: [],
-            other: [],
+            other: [
+                "1179",
+            ],
             death: "1179",
             refs: [
                 (
@@ -4412,10 +4775,11 @@
         ),
         (
             title: "Edward Bouverie Pusey",
-            description: "Priest",
+            description: "Priest, 1882",
             main: [],
             other: [
                 "Priest",
+                "1882",
             ],
             death: "1882",
             refs: [],
@@ -4430,10 +4794,11 @@
         ),
         (
             title: "Theodore of Tarsus",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 690",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "690",
             ],
             death: "690",
             refs: [],
@@ -4448,12 +4813,13 @@
         ),
         (
             title: "John Coleridge Patteson, Bishop of Melanesia, and his Companions",
-            description: "Martyrs",
+            description: "Martyrs, 1871",
             main: [
                 Martyr,
             ],
             other: [
                 "Martyrs",
+                "1871",
             ],
             death: "1871",
             refs: [],
@@ -4490,10 +4856,11 @@
         ),
         (
             title: "Philander Chase",
-            description: "Bishop of Ohio, and of Illinois",
+            description: "Bishop of Ohio, and of Illinois, 1852",
             main: [],
             other: [
                 "Bishop of Ohio, and of Illinois",
+                "1852",
             ],
             death: "1852",
             refs: [],
@@ -4508,11 +4875,12 @@
         ),
         (
             title: "Sergius",
-            description: "Abbot of Holy Trinity, Moscow",
+            description: "Abbot of Holy Trinity, Moscow, 1392",
             main: [],
             other: [
                 "Abbot of Holy Trinity",
                 "Moscow",
+                "1392",
             ],
             death: "1392",
             refs: [
@@ -4532,11 +4900,14 @@
             transfer: Normal,
         ),
         (
-            title: "Lancelot Andrewes, Bishop of Winchester, 1626. Wilson Carlile, Priest, 1942",
-            description: "",
+            title: "Lancelot Andrewes",
+            description: "Bishop of Winchester, 1626",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Bishop of Winchester",
+                "1626",
+            ],
+            death: "1626",
             refs: [],
             class: Commemoration,
             tag: "lancelot andrewes",
@@ -4548,11 +4919,34 @@
             transfer: Normal,
         ),
         (
-            title: "Vincent de Paul, Religious, and Prophetic Witness, 1660. Thomas Traherne, Priest, 1674",
-            description: "",
+            title: "Wilson Carlile",
+            description: "Priest, 1942",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Priest",
+                "1942",
+            ],
+            death: "1942",
+            refs: [],
+            class: Commemoration,
+            tag: "wilson carlile",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 9,
+                day: 26,
+            ),
+            transfer: Normal,
+        ),
+        (
+            title: "Vincent de Paul",
+            description: "Religious, and Prophetic Witness, 1660.",
+            main: [],
+            other: [
+                "Religious",
+                "and Prophetic Witness",
+                "1660.",
+            ],
+            death: "1660.",
             refs: [],
             class: Commemoration,
             tag: "vincent de paul",
@@ -4564,14 +4958,35 @@
             transfer: Normal,
         ),
         (
-            title: "Richard Rolle, 1349, Walter Hilton, 1396, and Margery Kempe, c. 1440, Mystics",
-            description: "",
+            title: "Thomas Traherne",
+            description: "Priest, 1674",
             main: [],
-            other: [],
+            other: [
+                "Priest",
+                "1674",
+            ],
+            death: "1674",
+            refs: [],
+            class: Commemoration,
+            tag: "thomas traherne",
+            has_eve: false,
+            date_cal: Fixed(
+                month: 9,
+                day: 27,
+            ),
+            transfer: Normal,
+        ),
+        (
+            title: "Richard Rolle, 1349, Walter Hilton, 1396, and Margery Kempe, c. 1440",
+            description: "Mystics",
+            main: [],
+            other: [
+                "Mystics",
+            ],
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "richard rolle",
+            tag: "richard rolle walter hilton margery kempe c",
             has_eve: false,
             date_cal: Fixed(
                 month: 9,
@@ -4593,7 +5008,7 @@
                 ),
             ],
             class: Festival,
-            tag: "michael",
+            tag: "michael all angels",
             has_eve: false,
             date_cal: Fixed(
                 month: 9,
@@ -4603,11 +5018,12 @@
         ),
         (
             title: "Jerome",
-            description: "Priest, and Monk of Bethlehem",
+            description: "Priest, and Monk of Bethlehem, 420",
             main: [],
             other: [
                 "Priest",
                 "and Monk of Bethlehem",
+                "420",
             ],
             death: "420",
             refs: [],
@@ -4622,10 +5038,11 @@
         ),
         (
             title: "Remegius",
-            description: "Bishop of Rheims",
+            description: "Bishop of Rheims, c. 530",
             main: [],
             other: [
                 "Bishop of Rheims",
+                "c. 530",
             ],
             death: "c. 530",
             refs: [
@@ -4652,7 +5069,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "george kennedy allen bell",
+            tag: "george kennedy allen bell of chichester ecumenist john raleigh mott ecumenical pioneer",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -4662,10 +5079,11 @@
         ),
         (
             title: "Francis of Assisi",
-            description: "Friar",
+            description: "Friar, 1226",
             main: [],
             other: [
                 "Friar",
+                "1226",
             ],
             death: "1226",
             refs: [],
@@ -4679,11 +5097,14 @@
             transfer: Normal,
         ),
         (
-            title: "William Tyndale and Miles Coverdale, Translators of the Bible, 1536, 1568",
-            description: "",
+            title: "William Tyndale and Miles Coverdale",
+            description: "Translators of the Bible, 1536, 1568",
             main: [],
-            other: [],
-            death: "",
+            other: [
+                "Translators of the Bible",
+                "1536, 1568",
+            ],
+            death: "1536, 1568",
             refs: [],
             class: Commemoration,
             tag: "william tyndale",
@@ -4696,10 +5117,11 @@
         ),
         (
             title: "Henry Melchior Muhlenberg",
-            description: "Lutheran Pastor in North America",
+            description: "Lutheran Pastor in North America, 1787",
             main: [],
             other: [
                 "Lutheran Pastor in North America",
+                "1787",
             ],
             death: "1787",
             refs: [],
@@ -4720,7 +5142,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "william dwight porter bliss",
+            tag: "william dwight porter bliss richard theodore ely economist",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -4730,10 +5152,11 @@
         ),
         (
             title: "Wilfred Thomason Grenfell",
-            description: "Medical Missionary",
+            description: "Medical Missionary, 1940",
             main: [],
             other: [
                 "Medical Missionary",
+                "1940",
             ],
             death: "1940",
             refs: [],
@@ -4748,10 +5171,11 @@
         ),
         (
             title: "Vida Dutton Scudder",
-            description: "Educator and Witness for Peace",
+            description: "Educator and Witness for Peace, 1954",
             main: [],
             other: [
                 "Educator and Witness for Peace",
+                "1954",
             ],
             death: "1954",
             refs: [],
@@ -4790,10 +5214,11 @@
         ),
         (
             title: "Joseph Schereschewsky",
-            description: "Bishop of Shanghai",
+            description: "Bishop of Shanghai, 1906",
             main: [],
             other: [
                 "Bishop of Shanghai",
+                "1906",
             ],
             death: "1906",
             refs: [],
@@ -4808,10 +5233,11 @@
         ),
         (
             title: "Teresa of Ávila",
-            description: "Nun",
+            description: "Nun, 1582",
             main: [],
             other: [
                 "Nun",
+                "1582",
             ],
             death: "1582",
             refs: [],
@@ -4826,10 +5252,11 @@
         ),
         (
             title: "Hugh Latimer and Nicholas Ridley",
-            description: "Bishops",
+            description: "Bishops, 1555/",
             main: [],
             other: [
                 "Bishops",
+                "1555/",
             ],
             death: "1555/",
             refs: [
@@ -4840,7 +5267,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "nicholas ridley",
+            tag: "hugh latimer nicholas ridley",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -4850,13 +5277,14 @@
         ),
         (
             title: "Ignatius",
-            description: "Bishop of Antioch, and Martyr",
+            description: "Bishop of Antioch, and Martyr, c. 115",
             main: [
                 Martyr,
             ],
             other: [
                 "Bishop of Antioch",
                 "and Martyr",
+                "c. 115",
             ],
             death: "c. 115",
             refs: [
@@ -4911,7 +5339,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "henry martyn",
+            tag: "henry martyn to india persia william carey to india",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -4921,13 +5349,14 @@
         ),
         (
             title: "Saint James of Jerusalem",
-            description: "Brother of our Lord Jesus Christ, and Martyr",
+            description: "Brother of our Lord Jesus Christ, and Martyr, c. 62",
             main: [
                 Martyr,
             ],
             other: [
                 "Brother of our Lord Jesus Christ",
                 "and Martyr",
+                "c. 62",
             ],
             death: "c. 62",
             refs: [
@@ -4948,10 +5377,11 @@
         ),
         (
             title: "Alfred the Great",
-            description: "King of the West Saxons",
+            description: "King of the West Saxons, 899",
             main: [],
             other: [
                 "King of the West Saxons",
+                "899",
             ],
             death: "899",
             refs: [],
@@ -4985,7 +5415,7 @@
                 ),
             ],
             class: Festival,
-            tag: "simon and jude",
+            tag: "simon jude",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -4995,17 +5425,18 @@
         ),
         (
             title: "James Hannington, Bishop of Eastern Equatorial Africa, and his Companions",
-            description: "Martyrs",
+            description: "Martyrs, 1885",
             main: [
                 Martyr,
             ],
             other: [
                 "Martyrs",
+                "1885",
             ],
             death: "1885",
             refs: [],
             class: Commemoration,
-            tag: "james hannington",
+            tag: "james hannington of eastern equatorial africa",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -5015,10 +5446,11 @@
         ),
         (
             title: "John Wyclif",
-            description: "Priest and Prophetic Witness",
+            description: "Priest and Prophetic Witness, 1384",
             main: [],
             other: [
                 "Priest and Prophetic Witness",
+                "1384",
             ],
             death: "1384",
             refs: [],
@@ -5039,7 +5471,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "paul shinji sasaki",
+            tag: "paul shinji sasaki of mid",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -5093,10 +5525,11 @@
         ),
         (
             title: "Richard Hooker",
-            description: "Priest",
+            description: "Priest, 1600",
             main: [],
             other: [
                 "Priest",
+                "1600",
             ],
             death: "1600",
             refs: [],
@@ -5111,10 +5544,11 @@
         ),
         (
             title: "William Temple",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 1944",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "1944",
             ],
             death: "1944",
             refs: [
@@ -5135,11 +5569,12 @@
         ),
         (
             title: "Willibrord",
-            description: "Archbishop of Utrecht, Missionary to Frisia",
+            description: "Archbishop of Utrecht, Missionary to Frisia, 739",
             main: [],
             other: [
                 "Archbishop of Utrecht",
                 "Missionary to Frisia",
+                "739",
             ],
             death: "739",
             refs: [],
@@ -5154,10 +5589,11 @@
         ),
         (
             title: "Leo the Great",
-            description: "Bishop of Rome",
+            description: "Bishop of Rome, 461",
             main: [],
             other: [
                 "Bishop of Rome",
+                "461",
             ],
             death: "461",
             refs: [
@@ -5178,10 +5614,11 @@
         ),
         (
             title: "Martin",
-            description: "Bishop of Tours",
+            description: "Bishop of Tours, 397",
             main: [],
             other: [
                 "Bishop of Tours",
+                "397",
             ],
             death: "397",
             refs: [
@@ -5202,10 +5639,11 @@
         ),
         (
             title: "Charles Simeon",
-            description: "Priest",
+            description: "Priest, 1836",
             main: [],
             other: [
                 "Priest",
+                "1836",
             ],
             death: "1836",
             refs: [],
@@ -5220,10 +5658,11 @@
         ),
         (
             title: "Consecration of Samuel Seabury",
-            description: "First American Bishop",
+            description: "First American Bishop, 1784",
             main: [],
             other: [
                 "First American Bishop",
+                "1784",
             ],
             death: "1784",
             refs: [],
@@ -5237,14 +5676,16 @@
             transfer: Normal,
         ),
         (
-            title: "Francis Asbury, 1816, and George Whitefield, 1770, Evangelists",
-            description: "",
+            title: "Francis Asbury, 1816, and George Whitefield, 1770",
+            description: "Evangelists",
             main: [],
-            other: [],
+            other: [
+                "Evangelists",
+            ],
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "francis asbury",
+            tag: "francis asbury george whitefield",
             has_eve: false,
             date_cal: Fixed(
                 month: 11,
@@ -5254,10 +5695,11 @@
         ),
         (
             title: "Margaret",
-            description: "Queen of Scotland",
+            description: "Queen of Scotland, 1093",
             main: [],
             other: [
                 "Queen of Scotland",
+                "1093",
             ],
             death: "1093",
             refs: [
@@ -5290,7 +5732,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "hugh",
+            tag: "hugh robert grosseteste s of lincoln",
             has_eve: false,
             date_cal: Fixed(
                 month: 11,
@@ -5300,10 +5742,11 @@
         ),
         (
             title: "Hilda",
-            description: "Abbess of Whitby",
+            description: "Abbess of Whitby, 680",
             main: [],
             other: [
                 "Abbess of Whitby",
+                "680",
             ],
             death: "680",
             refs: [
@@ -5324,10 +5767,11 @@
         ),
         (
             title: "Elizabeth",
-            description: "Princess of Hungary",
+            description: "Princess of Hungary, 1231",
             main: [],
             other: [
                 "Princess of Hungary",
+                "1231",
             ],
             death: "1231",
             refs: [
@@ -5348,10 +5792,11 @@
         ),
         (
             title: "Edmund",
-            description: "King of East Anglia",
+            description: "King of East Anglia, 870",
             main: [],
             other: [
                 "King of East Anglia",
+                "870",
             ],
             death: "870",
             refs: [
@@ -5380,7 +5825,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "william byrd",
+            tag: "william byrd john merbecke thomas tallis",
             has_eve: false,
             date_cal: Fixed(
                 month: 11,
@@ -5390,10 +5835,11 @@
         ),
         (
             title: "Clive Staples Lewis",
-            description: "Apologist and Spiritual Writer",
+            description: "Apologist and Spiritual Writer, 1963",
             main: [],
             other: [
                 "Apologist and Spiritual Writer",
+                "1963",
             ],
             death: "1963",
             refs: [
@@ -5414,10 +5860,11 @@
         ),
         (
             title: "Clement",
-            description: "Bishop of Rome",
+            description: "Bishop of Rome, c. 100",
             main: [],
             other: [
                 "Bishop of Rome",
+                "c. 100",
             ],
             death: "c. 100",
             refs: [
@@ -5438,10 +5885,11 @@
         ),
         (
             title: "James Otis Sargent Huntington",
-            description: "Priest and Monk",
+            description: "Priest and Monk, 1935",
             main: [],
             other: [
                 "Priest and Monk",
+                "1935",
             ],
             death: "1935",
             refs: [],
@@ -5456,10 +5904,11 @@
         ),
         (
             title: "Isaac Watts",
-            description: "Hymnwriter",
+            description: "Hymnwriter, 1748",
             main: [],
             other: [
                 "Hymnwriter",
+                "1748",
             ],
             death: "1748",
             refs: [],
@@ -5474,10 +5923,12 @@
         ),
         (
             title: "Kamehameha and Emma",
-            description: "King and Queen of Hawaii",
+            description: "King and Queen of Hawaii, 1864, 1885",
             main: [],
             other: [
                 "King and Queen of Hawaii",
+                "1864",
+                "1885",
             ],
             death: "1885",
             refs: [
@@ -5493,7 +5944,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "kamehameha and emma",
+            tag: "kamehameha emma",
             has_eve: false,
             date_cal: Fixed(
                 month: 11,
@@ -5525,10 +5976,11 @@
         ),
         (
             title: "Nicholas Ferrar",
-            description: "Deacon",
+            description: "Deacon, 1637",
             main: [],
             other: [
                 "Deacon",
+                "1637",
             ],
             death: "1637",
             refs: [],
@@ -5543,10 +5995,11 @@
         ),
         (
             title: "Channing Moore Williams",
-            description: "Missionary Bishop in China and Japan",
+            description: "Missionary Bishop in China and Japan, 1910",
             main: [],
             other: [
                 "Missionary Bishop in China and Japan",
+                "1910",
             ],
             death: "1910",
             refs: [],
@@ -5561,10 +6014,11 @@
         ),
         (
             title: "Francis Xavier",
-            description: "Missionary to the Far East",
+            description: "Missionary to the Far East, 1552",
             main: [],
             other: [
                 "Missionary to the Far East",
+                "1552",
             ],
             death: "1552",
             refs: [],
@@ -5579,10 +6033,11 @@
         ),
         (
             title: "John of Damascus",
-            description: "Priest",
+            description: "Priest, c. 760",
             main: [],
             other: [
                 "Priest",
+                "c. 760",
             ],
             death: "c. 760",
             refs: [],
@@ -5597,10 +6052,11 @@
         ),
         (
             title: "Clement of Alexandria",
-            description: "Priest",
+            description: "Priest, c. 210",
             main: [],
             other: [
                 "Priest",
+                "c. 210",
             ],
             death: "c. 210",
             refs: [],
@@ -5615,10 +6071,11 @@
         ),
         (
             title: "Nicholas",
-            description: "Bishop of Myra",
+            description: "Bishop of Myra, c. 342",
             main: [],
             other: [
                 "Bishop of Myra",
+                "c. 342",
             ],
             death: "c. 342",
             refs: [
@@ -5639,10 +6096,11 @@
         ),
         (
             title: "Ambrose",
-            description: "Bishop of Milan",
+            description: "Bishop of Milan, 397",
             main: [],
             other: [
                 "Bishop of Milan",
+                "397",
             ],
             death: "397",
             refs: [],
@@ -5657,10 +6115,11 @@
         ),
         (
             title: "Richard Baxter",
-            description: "Pastor and Writer",
+            description: "Pastor and Writer, 1691",
             main: [],
             other: [
                 "Pastor and Writer",
+                "1691",
             ],
             death: "1691",
             refs: [],
@@ -5681,7 +6140,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "karl barth",
+            tag: "karl barth pastor theologian thomas merton contemplative writer",
             has_eve: false,
             date_cal: Fixed(
                 month: 12,
@@ -5691,12 +6150,13 @@
         ),
         (
             title: "Lucy (Lucia)",
-            description: "Martyr at Syracuse",
+            description: "Martyr at Syracuse, 304",
             main: [
                 Martyr,
             ],
             other: [
                 "Martyr at Syracuse",
+                "304",
             ],
             death: "304",
             refs: [
@@ -5717,10 +6177,11 @@
         ),
         (
             title: "Juan de la Cruz (John of the Cross)",
-            description: "Mystic",
+            description: "Mystic, 1591",
             main: [],
             other: [
                 "Mystic",
+                "1591",
             ],
             death: "1591",
             refs: [
@@ -5753,7 +6214,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "john horden",
+            tag: "john horden in canada robert mcdonald",
             has_eve: false,
             date_cal: Fixed(
                 month: 12,
@@ -5769,7 +6230,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "ralph adams cram",
+            tag: "ralph adams cram richard upjohn architects john lafarge artist",
             has_eve: false,
             date_cal: Fixed(
                 month: 12,
@@ -5787,7 +6248,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "william lloyd garrison",
+            tag: "william lloyd garrison maria stewart",
             has_eve: false,
             date_cal: Fixed(
                 month: 12,
@@ -5797,10 +6258,11 @@
         ),
         (
             title: "Lillian Trasher",
-            description: "Missionary in Egypt",
+            description: "Missionary in Egypt, 1961",
             main: [],
             other: [
                 "Missionary in Egypt",
+                "1961",
             ],
             death: "1961",
             refs: [],
@@ -5849,7 +6311,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "charlotte digges moon",
+            tag: "charlotte digges lottie moon in china henry budd",
             has_eve: false,
             date_cal: Fixed(
                 month: 12,
@@ -5947,9 +6409,11 @@
         ),
         (
             title: "Thomas Becket",
-            description: "",
+            description: "1170",
             main: [],
-            other: [],
+            other: [
+                "1170",
+            ],
             death: "1170",
             refs: [],
             class: Commemoration,
@@ -5963,15 +6427,16 @@
         ),
         (
             title: "Frances Joseph-Gaudet",
-            description: "Educator and Prison Reformer",
+            description: "Educator and Prison Reformer, 1934",
             main: [],
             other: [
                 "Educator and Prison Reformer",
+                "1934",
             ],
             death: "1934",
             refs: [],
             class: Commemoration,
-            tag: "frances joseph-gaudet",
+            tag: "frances joseph",
             has_eve: false,
             date_cal: Fixed(
                 month: 12,
@@ -5981,10 +6446,11 @@
         ),
         (
             title: "Samuel Ajayi Crowther",
-            description: "Bishop in the Niger Territories",
+            description: "Bishop in the Niger Territories, 1891",
             main: [],
             other: [
                 "Bishop in the Niger Territories",
+                "1891",
             ],
             death: "1891",
             refs: [],
@@ -6083,7 +6549,7 @@
                     description: "Maundy Thursday",
                 ),
             ],
-            class: Festival,
+            class: Principal,
             tag: "maundy thursday",
             has_eve: false,
             date_cal: After(
@@ -6113,7 +6579,7 @@
                     description: "Good Friday",
                 ),
             ],
-            class: Festival,
+            class: Principal,
             tag: "good friday",
             has_eve: false,
             date_cal: After(

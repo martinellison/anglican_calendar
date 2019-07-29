@@ -1,10 +1,18 @@
 (
+    info: (
+        description: "added local edits",
+        created: "2019-07-29T04:36:23.636078503Z",
+        creation: "edit data",
+    ),
+    province: HongKong,
     holydays: [
         (
             title: "Basil and Gregory",
-            description: "",
+            description: "379 and 389",
             main: [],
-            other: [],
+            other: [
+                "379 and 389",
+            ],
             death: "379 and 389",
             refs: [
                 (
@@ -19,7 +27,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "basil and gregory",
+            tag: "basil gregory",
             has_eve: false,
             date_cal: Fixed(
                 month: 1,
@@ -51,9 +59,11 @@
         ),
         (
             title: "George Fox",
-            description: "",
+            description: "1691",
             main: [],
-            other: [],
+            other: [
+                "1691",
+            ],
             death: "1691",
             refs: [],
             class: Commemoration,
@@ -67,9 +77,11 @@
         ),
         (
             title: "Richard Rolle",
-            description: "",
+            description: "1349",
             main: [],
-            other: [],
+            other: [
+                "1349",
+            ],
             death: "1349",
             refs: [],
             class: Commemoration,
@@ -83,9 +95,11 @@
         ),
         (
             title: "Agnes",
-            description: "",
+            description: "304",
             main: [],
-            other: [],
+            other: [
+                "304",
+            ],
             death: "304",
             refs: [
                 (
@@ -105,9 +119,11 @@
         ),
         (
             title: "Francis de Sales",
-            description: "",
+            description: "1622",
             main: [],
-            other: [],
+            other: [
+                "1622",
+            ],
             death: "1622",
             refs: [],
             class: Commemoration,
@@ -138,7 +154,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "timothy and titus",
+            tag: "timothy titus",
             has_eve: false,
             date_cal: Fixed(
                 month: 1,
@@ -148,9 +164,11 @@
         ),
         (
             title: "Thomas Aquinas",
-            description: "",
+            description: "1274",
             main: [],
-            other: [],
+            other: [
+                "1274",
+            ],
             death: "1274",
             refs: [],
             class: Commemoration,
@@ -164,9 +182,11 @@
         ),
         (
             title: "Ansgar",
-            description: "",
+            description: "865",
             main: [],
-            other: [],
+            other: [
+                "865",
+            ],
             death: "865",
             refs: [],
             class: Commemoration,
@@ -180,13 +200,15 @@
         ),
         (
             title: "Martyrs of Japan",
-            description: "",
+            description: "1597",
             main: [],
-            other: [],
+            other: [
+                "1597",
+            ],
             death: "1597",
             refs: [],
             class: Commemoration,
-            tag: "martyrs of japan",
+            tag: "of japan",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -196,9 +218,11 @@
         ),
         (
             title: "Cyril and Methodius",
-            description: "",
+            description: "869 and 885",
             main: [],
-            other: [],
+            other: [
+                "869 and 885",
+            ],
             death: "869 and 885",
             refs: [
                 (
@@ -213,7 +237,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "cyril and methodius",
+            tag: "cyril methodius",
             has_eve: false,
             date_cal: Fixed(
                 month: 2,
@@ -223,9 +247,11 @@
         ),
         (
             title: "Thomas Bray",
-            description: "",
+            description: "1730",
             main: [],
-            other: [],
+            other: [
+                "1730",
+            ],
             death: "1730",
             refs: [],
             class: Commemoration,
@@ -239,9 +265,11 @@
         ),
         (
             title: "George Herbert",
-            description: "",
+            description: "1633",
             main: [],
-            other: [],
+            other: [
+                "1633",
+            ],
             death: "1633",
             refs: [],
             class: Commemoration,
@@ -255,9 +283,11 @@
         ),
         (
             title: "Martyrs of Carthage",
-            description: "",
+            description: "203",
             main: [],
-            other: [],
+            other: [
+                "203",
+            ],
             death: "203",
             refs: [],
             class: Commemoration,
@@ -271,10 +301,11 @@
         ),
         (
             title: "Patrick",
-            description: "Apostle of Ireland",
+            description: "Apostle of Ireland, 460",
             main: [],
             other: [
                 "Apostle of Ireland",
+                "460",
             ],
             death: "460",
             refs: [
@@ -324,10 +355,11 @@
         ),
         (
             title: "Thomas Cranmer",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 1556",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "1556",
             ],
             death: "1556",
             refs: [],
@@ -342,9 +374,11 @@
         ),
         (
             title: "Walter Hilton",
-            description: "",
+            description: "1396",
             main: [],
-            other: [],
+            other: [
+                "1396",
+            ],
             death: "1396",
             refs: [],
             class: Commemoration,
@@ -374,9 +408,11 @@
         ),
         (
             title: "John Donne",
-            description: "",
+            description: "1631",
             main: [],
-            other: [],
+            other: [
+                "1631",
+            ],
             death: "1631",
             refs: [],
             class: Commemoration,
@@ -390,9 +426,11 @@
         ),
         (
             title: "William Law",
-            description: "",
+            description: "1761",
             main: [],
-            other: [],
+            other: [
+                "1761",
+            ],
             death: "1761",
             refs: [],
             class: Commemoration,
@@ -406,10 +444,11 @@
         ),
         (
             title: "Anselm",
-            description: "Archbishop of Canterbury",
+            description: "Archbishop of Canterbury, 1109",
             main: [],
             other: [
                 "Archbishop of Canterbury",
+                "1109",
             ],
             death: "1109",
             refs: [
@@ -430,10 +469,11 @@
         ),
         (
             title: "George",
-            description: "Patron saint of England",
+            description: "Patron saint of England, 304",
             main: [],
             other: [
                 "Patron saint of England",
+                "304",
             ],
             death: "304",
             refs: [
@@ -470,9 +510,11 @@
         ),
         (
             title: "Catherine of Siena",
-            description: "",
+            description: "1380",
             main: [],
-            other: [],
+            other: [
+                "1380",
+            ],
             death: "1380",
             refs: [],
             class: Commemoration,
@@ -503,7 +545,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "philip and james",
+            tag: "james philip",
             has_eve: false,
             date_cal: Fixed(
                 month: 5,
@@ -513,9 +555,11 @@
         ),
         (
             title: "Julian",
-            description: "",
+            description: "1417",
             main: [],
-            other: [],
+            other: [
+                "1417",
+            ],
             death: "1417",
             refs: [
                 (
@@ -535,9 +579,11 @@
         ),
         (
             title: "Matteo Ricci",
-            description: "",
+            description: "1610",
             main: [],
-            other: [],
+            other: [
+                "1610",
+            ],
             death: "1610",
             refs: [],
             class: Commemoration,
@@ -573,9 +619,11 @@
         ),
         (
             title: "Helena",
-            description: "",
+            description: "330",
             main: [],
-            other: [],
+            other: [
+                "330",
+            ],
             death: "330",
             refs: [
                 (
@@ -595,9 +643,11 @@
         ),
         (
             title: "John and Charles Wesley",
-            description: "",
+            description: "1791 and 1788",
             main: [],
-            other: [],
+            other: [
+                "1791 and 1788",
+            ],
             death: "1791 and 1788",
             refs: [
                 (
@@ -607,7 +657,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "john and charles wesley",
+            tag: "john charles wesley",
             has_eve: false,
             date_cal: Fixed(
                 month: 5,
@@ -617,10 +667,11 @@
         ),
         (
             title: "Augustine",
-            description: "first Archbishop of Canterbury",
+            description: "first Archbishop of Canterbury, 605",
             main: [],
             other: [
                 "first Archbishop of Canterbury",
+                "605",
             ],
             death: "605",
             refs: [
@@ -663,9 +714,11 @@
         ),
         (
             title: "Thomas Ken",
-            description: "",
+            description: "1711",
             main: [],
-            other: [],
+            other: [
+                "1711",
+            ],
             death: "1711",
             refs: [],
             class: Commemoration,
@@ -695,9 +748,11 @@
         ),
         (
             title: "Richard Baxter",
-            description: "",
+            description: "1691",
             main: [],
-            other: [],
+            other: [
+                "1691",
+            ],
             death: "1691",
             refs: [],
             class: Commemoration,
@@ -711,9 +766,11 @@
         ),
         (
             title: "Joseph Butler",
-            description: "",
+            description: "1752",
             main: [],
-            other: [],
+            other: [
+                "1752",
+            ],
             death: "1752",
             refs: [],
             class: Commemoration,
@@ -733,7 +790,7 @@
             death: "",
             refs: [],
             class: Commemoration,
-            tag: "nativity of st. john the baptist",
+            tag: "birth of john the baptist",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -743,9 +800,11 @@
         ),
         (
             title: "Peter and Paul",
-            description: "",
+            description: "64 and 67",
             main: [],
-            other: [],
+            other: [
+                "64 and 67",
+            ],
             death: "64 and 67",
             refs: [
                 (
@@ -760,7 +819,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "peter and paul",
+            tag: "peter paul",
             has_eve: false,
             date_cal: Fixed(
                 month: 6,
@@ -770,9 +829,11 @@
         ),
         (
             title: "Henry Venn",
-            description: "",
+            description: "1797",
             main: [],
-            other: [],
+            other: [
+                "1797",
+            ],
             death: "1797",
             refs: [
                 (
@@ -814,13 +875,15 @@
         ),
         (
             title: "Martyrs of China",
-            description: "",
+            description: "1747",
             main: [],
-            other: [],
+            other: [
+                "1747",
+            ],
             death: "1747",
             refs: [],
             class: Commemoration,
-            tag: "martyrs of china",
+            tag: "of china",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -830,9 +893,11 @@
         ),
         (
             title: "Benedict",
-            description: "",
+            description: "547",
             main: [],
-            other: [],
+            other: [
+                "547",
+            ],
             death: "547",
             refs: [
                 (
@@ -852,9 +917,11 @@
         ),
         (
             title: "Bonaventure",
-            description: "",
+            description: "1274",
             main: [],
-            other: [],
+            other: [
+                "1274",
+            ],
             death: "1274",
             refs: [],
             class: Commemoration,
@@ -868,9 +935,11 @@
         ),
         (
             title: "Gregory",
-            description: "",
+            description: "394",
             main: [],
-            other: [],
+            other: [
+                "394",
+            ],
             death: "394",
             refs: [
                 (
@@ -890,13 +959,15 @@
         ),
         (
             title: "Bartolomé de las Casas",
-            description: "",
+            description: "1566",
             main: [],
-            other: [],
+            other: [
+                "1566",
+            ],
             death: "1566",
             refs: [],
             class: Commemoration,
-            tag: "bartolomé de las casas",
+            tag: "bartolom de las casas",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -922,9 +993,11 @@
         ),
         (
             title: "Bridget",
-            description: "",
+            description: "1373",
             main: [],
-            other: [],
+            other: [
+                "1373",
+            ],
             death: "1373",
             refs: [
                 (
@@ -944,9 +1017,11 @@
         ),
         (
             title: "James",
-            description: "",
+            description: "44",
             main: [],
-            other: [],
+            other: [
+                "44",
+            ],
             death: "44",
             refs: [
                 (
@@ -978,7 +1053,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "anne",
+            tag: "anne joachim",
             has_eve: false,
             date_cal: Fixed(
                 month: 7,
@@ -988,9 +1063,11 @@
         ),
         (
             title: "William Wilberforce",
-            description: "",
+            description: "1833",
             main: [],
-            other: [],
+            other: [
+                "1833",
+            ],
             death: "1833",
             refs: [],
             class: Commemoration,
@@ -1004,9 +1081,11 @@
         ),
         (
             title: "Ignatius",
-            description: "",
+            description: "1556",
             main: [],
-            other: [],
+            other: [
+                "1556",
+            ],
             death: "1556",
             refs: [
                 (
@@ -1042,9 +1121,11 @@
         ),
         (
             title: "Saint Dominic",
-            description: "",
+            description: "1221",
             main: [],
-            other: [],
+            other: [
+                "1221",
+            ],
             death: "1221",
             refs: [],
             class: Commemoration,
@@ -1058,9 +1139,11 @@
         ),
         (
             title: "Clare of Assisi",
-            description: "",
+            description: "1253",
             main: [],
-            other: [],
+            other: [
+                "1253",
+            ],
             death: "1253",
             refs: [],
             class: Commemoration,
@@ -1124,7 +1207,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "william and catherine booth",
+            tag: "william catherine booth",
             has_eve: false,
             date_cal: Fixed(
                 month: 8,
@@ -1156,9 +1239,11 @@
         ),
         (
             title: "Augustine",
-            description: "",
+            description: "430",
             main: [],
-            other: [],
+            other: [
+                "430",
+            ],
             death: "430",
             refs: [
                 (
@@ -1178,9 +1263,11 @@
         ),
         (
             title: "John Bunyan",
-            description: "",
+            description: "1688",
             main: [],
-            other: [],
+            other: [
+                "1688",
+            ],
             death: "1688",
             refs: [],
             class: Commemoration,
@@ -1194,9 +1281,11 @@
         ),
         (
             title: "Gregory I",
-            description: "",
+            description: "604",
             main: [],
-            other: [],
+            other: [
+                "604",
+            ],
             death: "604",
             refs: [
                 (
@@ -1216,9 +1305,11 @@
         ),
         (
             title: "John Chrysostom",
-            description: "",
+            description: "407",
             main: [],
-            other: [],
+            other: [
+                "407",
+            ],
             death: "407",
             refs: [],
             class: Commemoration,
@@ -1248,9 +1339,11 @@
         ),
         (
             title: "Lancelot Andrewes",
-            description: "",
+            description: "1626",
             main: [],
-            other: [],
+            other: [
+                "1626",
+            ],
             death: "1626",
             refs: [],
             class: Commemoration,
@@ -1264,9 +1357,11 @@
         ),
         (
             title: "Vincent de Paul",
-            description: "",
+            description: "1660",
             main: [],
-            other: [],
+            other: [
+                "1660",
+            ],
             death: "1660",
             refs: [],
             class: Commemoration,
@@ -1302,9 +1397,11 @@
         ),
         (
             title: "Jerome",
-            description: "",
+            description: "420",
             main: [],
-            other: [],
+            other: [
+                "420",
+            ],
             death: "420",
             refs: [],
             class: Commemoration,
@@ -1318,9 +1415,11 @@
         ),
         (
             title: "Francis of Assisi",
-            description: "",
+            description: "1226",
             main: [],
-            other: [],
+            other: [
+                "1226",
+            ],
             death: "1226",
             refs: [],
             class: Commemoration,
@@ -1334,9 +1433,11 @@
         ),
         (
             title: "William Tyndale",
-            description: "",
+            description: "1536",
             main: [],
-            other: [],
+            other: [
+                "1536",
+            ],
             death: "1536",
             refs: [],
             class: Commemoration,
@@ -1350,9 +1451,11 @@
         ),
         (
             title: "Thomas Traherne",
-            description: "",
+            description: "1674",
             main: [],
-            other: [],
+            other: [
+                "1674",
+            ],
             death: "1674",
             refs: [],
             class: Commemoration,
@@ -1366,9 +1469,11 @@
         ),
         (
             title: "Teresa of Ávila",
-            description: "",
+            description: "1582",
             main: [],
-            other: [],
+            other: [
+                "1582",
+            ],
             death: "1582",
             refs: [],
             class: Commemoration,
@@ -1382,9 +1487,11 @@
         ),
         (
             title: "Nicholas Ridley",
-            description: "",
+            description: "1555",
             main: [],
-            other: [],
+            other: [
+                "1555",
+            ],
             death: "1555",
             refs: [
                 (
@@ -1420,9 +1527,11 @@
         ),
         (
             title: "Henry Martyn",
-            description: "",
+            description: "1812",
             main: [],
-            other: [],
+            other: [
+                "1812",
+            ],
             death: "1812",
             refs: [],
             class: Commemoration,
@@ -1453,7 +1562,7 @@
                 ),
             ],
             class: Commemoration,
-            tag: "simon and jude",
+            tag: "simon jude",
             has_eve: false,
             date_cal: Fixed(
                 month: 10,
@@ -1463,9 +1572,11 @@
         ),
         (
             title: "Martin Luther",
-            description: "",
+            description: "1546",
             main: [],
-            other: [],
+            other: [
+                "1546",
+            ],
             death: "1546",
             refs: [],
             class: Commemoration,
@@ -1501,9 +1612,11 @@
         ),
         (
             title: "Richard Hooker",
-            description: "",
+            description: "1600",
             main: [],
-            other: [],
+            other: [
+                "1600",
+            ],
             death: "1600",
             refs: [],
             class: Commemoration,
@@ -1517,9 +1630,11 @@
         ),
         (
             title: "Martin of Porres",
-            description: "",
+            description: "1639",
             main: [],
-            other: [],
+            other: [
+                "1639",
+            ],
             death: "1639",
             refs: [],
             class: Commemoration,
@@ -1533,9 +1648,11 @@
         ),
         (
             title: "Leo I",
-            description: "",
+            description: "461",
             main: [],
-            other: [],
+            other: [
+                "461",
+            ],
             death: "461",
             refs: [
                 (
@@ -1555,9 +1672,11 @@
         ),
         (
             title: "Samuel Seabury",
-            description: "",
+            description: "1796",
             main: [],
-            other: [],
+            other: [
+                "1796",
+            ],
             death: "1796",
             refs: [
                 (
@@ -1577,13 +1696,15 @@
         ),
         (
             title: "Edmund Rich, Archbishop of Canterbury",
-            description: "",
+            description: "1240",
             main: [],
-            other: [],
+            other: [
+                "1240",
+            ],
             death: "1240",
             refs: [],
             class: Commemoration,
-            tag: "edmund rich",
+            tag: "edmund rich arch of canterbury",
             has_eve: false,
             date_cal: Fixed(
                 month: 11,
@@ -1593,9 +1714,11 @@
         ),
         (
             title: "Clement I",
-            description: "",
+            description: "100",
             main: [],
-            other: [],
+            other: [
+                "100",
+            ],
             death: "100",
             refs: [
                 (
@@ -1615,9 +1738,11 @@
         ),
         (
             title: "Isaac Watts",
-            description: "",
+            description: "1748",
             main: [],
-            other: [],
+            other: [
+                "1748",
+            ],
             death: "1748",
             refs: [],
             class: Commemoration,
@@ -1631,9 +1756,11 @@
         ),
         (
             title: "Saint Andrew",
-            description: "",
+            description: "38",
             main: [],
-            other: [],
+            other: [
+                "38",
+            ],
             death: "38",
             refs: [],
             class: Commemoration,
@@ -1647,9 +1774,11 @@
         ),
         (
             title: "Francis Xavier",
-            description: "",
+            description: "1552",
             main: [],
-            other: [],
+            other: [
+                "1552",
+            ],
             death: "1552",
             refs: [],
             class: Commemoration,
@@ -1663,9 +1792,11 @@
         ),
         (
             title: "Nicholas Ferrar",
-            description: "",
+            description: "1637",
             main: [],
-            other: [],
+            other: [
+                "1637",
+            ],
             death: "1637",
             refs: [],
             class: Commemoration,
@@ -1701,9 +1832,11 @@
         ),
         (
             title: "Samuel Johnson",
-            description: "",
+            description: "1784",
             main: [],
-            other: [],
+            other: [
+                "1784",
+            ],
             death: "1784",
             refs: [],
             class: Commemoration,
@@ -1717,9 +1850,11 @@
         ),
         (
             title: "John of the Cross",
-            description: "",
+            description: "1591",
             main: [],
-            other: [],
+            other: [
+                "1591",
+            ],
             death: "1591",
             refs: [],
             class: Commemoration,
@@ -1765,9 +1900,11 @@
         ),
         (
             title: "John the Apostle",
-            description: "",
+            description: "100",
             main: [],
-            other: [],
+            other: [
+                "100",
+            ],
             death: "100",
             refs: [],
             class: Commemoration,
@@ -1781,9 +1918,11 @@
         ),
         (
             title: "Thomas Becket",
-            description: "",
+            description: "1170",
             main: [],
-            other: [],
+            other: [
+                "1170",
+            ],
             death: "1170",
             refs: [],
             class: Commemoration,
@@ -1797,9 +1936,11 @@
         ),
         (
             title: "John Wyclif",
-            description: "",
+            description: "1384",
             main: [],
-            other: [],
+            other: [
+                "1384",
+            ],
             death: "1384",
             refs: [],
             class: Commemoration,
@@ -1897,7 +2038,7 @@
                     description: "Maundy Thursday",
                 ),
             ],
-            class: Festival,
+            class: Principal,
             tag: "maundy thursday",
             has_eve: false,
             date_cal: After(
@@ -1927,7 +2068,7 @@
                     description: "Good Friday",
                 ),
             ],
-            class: Festival,
+            class: Principal,
             tag: "good friday",
             has_eve: false,
             date_cal: After(

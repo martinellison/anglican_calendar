@@ -15,7 +15,7 @@ use anglican_calendar::calendar;
 use ansi_term::Colour::*;
 use regex::Regex;
 use ron::de::from_reader;
-use std::cmp::Ordering;
+use ron::ser::to_string_pretty;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt;
@@ -23,10 +23,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufWriter;
 use std::path::Path;
-use std::str::FromStr;
 use structopt::StructOpt;
-
-//mod tagfix;
 
 fn main() {
     println!("Copyright ©2019 Martin Ellison. This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under the GPL3 licence; see the README file for details.");
@@ -40,25 +37,24 @@ fn run() -> Result<(), calendar::CalendarError> {
         println!("getting holydays data");
     }
     let mut holydays_data = HolydaysData::new(&opt.base_dir, opt.verbose)?;
+    let prov_list = calendar::ProvinceList::make();
     match opt.province {
         None => {
-            get_cofe(&mut holydays_data, &opt.base_dir, opt.verbose);
-            get_hkskh(&mut holydays_data, &opt.base_dir, opt.verbose);
-            get_ecusa(&mut holydays_data, &opt.base_dir, opt.verbose);
-            get_aca(&mut holydays_data, &opt.base_dir, opt.verbose);
+            for (_p, pd) in prov_list.all() {
+                get_province(&pd, &mut holydays_data, &opt.base_dir, opt.verbose)
+            }
         }
-        Some(Province::ChurchOfEngland) => {
-            get_cofe(&mut holydays_data, &opt.base_dir, opt.verbose);
+        Some(calendar::Province::ChurchOfEngland)
+        | Some(calendar::Province::ECUSA)
+        | Some(calendar::Province::HongKong)
+        | Some(calendar::Province::Australia)
+        | Some(calendar::Province::SouthAfrica)
+        | Some(calendar::Province::Canada)
+        | Some(calendar::Province::BCP) => {
+            let pd = prov_list.get(opt.province.unwrap());
+            get_province(&pd, &mut holydays_data, &opt.base_dir, opt.verbose)
         }
-        Some(Province::ECUSA) => {
-            get_ecusa(&mut holydays_data, &opt.base_dir, opt.verbose);
-        }
-        Some(Province::HongKong) => {
-            get_hkskh(&mut holydays_data, &opt.base_dir, opt.verbose);
-        }
-        Some(Province::Australia) => {
-            get_aca(&mut holydays_data, &opt.base_dir, opt.verbose);
-        }
+        _ => panic!(format!("bad province {:?}", opt.province)),
     }
     if opt.verbose {
         println!("reporting");
@@ -73,50 +69,18 @@ pub struct Opt {
     /// Print some debugging messages
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
-    /// List tags
-    #[structopt(short = "l", long = "listtags")]
-    tag_list: bool,
-    /// Report by date
-    #[structopt(short = "d", long = "date")]
-    date_report: bool,
-    /// Report by tag
-    #[structopt(short = "t", long = "tag")]
-    tag_report: bool,
     /// Output calendar data file    
     #[structopt(short = "o", long = "output")]
     out_file: Option<String>,
     /// Only one province
     #[structopt(short = "p", long = "province")]
-    province: Option<Province>,
+    province: Option<calendar::Province>,
     /// Base directory for input
     #[structopt(short = "b", long = "base")]
     base_dir: String,
-}
-
-//const VERBOSE: bool = true;
-/// whatever has a calendar
-#[derive(Eq, PartialEq, Hash, Debug, Clone, Copy)]
-enum Province {
-    ChurchOfEngland,
-    HongKong,
-    ECUSA,
-    Australia,
-}
-impl FromStr for Province {
-    type Err = calendar::CalendarError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "cofe" | "en" => Ok(Province::ChurchOfEngland),
-            "hkskh" | "hk" => Ok(Province::HongKong),
-            "ecusa" | "tec" | "usa" | "us" => Ok(Province::ECUSA),
-            "aca" | "au" => Ok(Province::Australia),
-            _ => Err(calendar::CalendarError::new(&format!(
-                "unknown province {}",
-                &s
-            ))),
-        }
-    }
+    /// Description for output file
+    #[structopt(long = "descr")]
+    descr: Option<String>,
 }
 #[derive(Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 enum HolydayDate {
@@ -134,7 +98,7 @@ impl fmt::Display for HolydayDate {
 #[derive(Clone, Debug)]
 struct Holyday {
     date: HolydayDate,
-    province: Province,
+    province: calendar::Province,
     name: String,
     tag: String,
     source: String,
@@ -145,60 +109,49 @@ struct Holyday {
     refs: Vec<String>,
     transfer: calendar::TransferType,
 }
-impl Holyday {
-    fn cmp_by_date(a: &Self, b: &Self) -> Ordering {
-        let c = a.date.cmp(&b.date);
-        if c == Ordering::Equal {
-            a.tag.cmp(&b.tag)
-        } else {
-            c
-        }
-    }
-    fn cmp_by_tag(a: &Self, b: &Self) -> Ordering {
-        let c = a.tag.cmp(&b.tag);
-        if c == Ordering::Equal {
-            a.date.cmp(&b.date)
-        } else {
-            c
-        }
-    }
-}
+impl Holyday {}
 struct HolydaysData {
+    base_dir: String,
     holydays: Vec<Holyday>,
-    tags: HashMap<String, HashSet<Province>>,
+    tags: HashMap<String, HashSet<calendar::Province>>,
     tag_fixes: HashMap<String, String>,
     extra_tag_fixes: HashMap<String, String>,
     bp_re: Regex,
-    the_re: Regex,
-    //    dash_re: Regex,
+    //   the_re: Regex,
+    white_re: Regex,
+    phrase_re: Regex,
+    phrase_sp_re: Regex,
+    dash_re: Regex,
     verbose: bool,
+    as_fixed: HashMap<String, String>,
+    as_unfixed: HashSet<String>,
 }
 impl HolydaysData {
     fn new(base_dir: &str, verbose: bool) -> Result<Self, calendar::CalendarError> {
         let fix_fn = base_dir.to_owned() + "/fixes.ron";
-        // let reader = File::open(&fix_fn).map_err(calendar::CalendarError::from_error)?;
         let tag_fixes: HashMap<String, String> = get_map(&fix_fn)?;
         let extra_fix_fn = base_dir.to_owned() + "/extra-fixes.ron";
         let extra_tag_fixes: HashMap<String, String> = get_map(&extra_fix_fn)?;
-        // from_reader(reader).map_err(calendar::CalendarError::from_error)?;
         Ok(Self {
+            base_dir: base_dir.to_string(),
             holydays: vec![],
             tags: HashMap::new(),
             tag_fixes,
             extra_tag_fixes,
             bp_re: Regex::new(r"\s*\([^)]+\)\s*").unwrap(),
-            the_re: Regex::new(r"^the\s+").unwrap(),
-            //       dash_re: Regex::new(r"\s*[-].*").unwrap(),
+            //    the_re: Regex::new(r"^the\s+").unwrap(),
+            white_re: Regex::new(r"\s+").unwrap(),
+            phrase_re: Regex::new(r"the evangelist|the apostle|of our lord jesus christ|of our lord|of jesus|of the lord|st\.\s*|\ssts\s|his companions|her companions|and their companion|apostles|apostle|evangelist|deaconess|deacon|missionaries|missionary|bishop|abp|martyrs?|abbot|priest|monk|is celebrated.*|may be celebrated .*|may be kept.*|alternative .*|traditionally .*|also in.*|this festival").unwrap(),
+            phrase_sp_re: Regex::new(r"saint | st |^st | day |[^A-Za-z ]+|^the\s+|\s+day$|which .*$|is .^$|of christ |of christ$|\([^)]+\)|\s+and\s+|^sts\s+").unwrap(),
+            dash_re: Regex::new(r"\s*[-–].*$").unwrap(),
             verbose,
+            as_fixed: HashMap::new(),
+            as_unfixed: HashSet::new(),
         })
     }
     fn add(&mut self, holyday: &mut Holyday) {
         let extra_tag = format!("-{:?}-{}", holyday.province, holyday.date);
         holyday.tag = self.fix_tag(&holyday.tag, &extra_tag);
-        // .tag_fixes
-        // .get(&holyday.tag)
-        // .unwrap_or(&holyday.tag)
-        // .to_string();
         match self.tags.get_mut(&holyday.tag) {
             Some(s) => {
                 s.insert(holyday.province);
@@ -211,83 +164,112 @@ impl HolydaysData {
         }
         self.holydays.push(holyday.clone());
     }
-    fn fix_tag(&self, tag: &str, dist: &str) -> String {
-        let t1 = tag
-            .replace("saint", "")
-            .replace("the evangelist", "")
-            .replace("the apostle", "")
-            .replace("of our lord jesus christ", "")
-            .replace("of our lord", "")
-            .replace("of jesus", "")
-            .replace("of christ", "")
-            .replace(" day", " ")
-            .replace("  ", " ")
-            .trim()
-            .to_string()
-            .replace("[^A-Za-z ]+", " ")
-            .to_lowercase();
-        let t2: String = self.bp_re.replace(&t1, " ").to_owned().to_string();
-        let t3: String = self.the_re.replace(&t2, " ").to_owned().to_string();
-        //   let t3a: String = self.dash_re.replace(&t3, " ").to_owned().to_string();
-        let t3a = match t3.find(" – ") {
-            None => t3.as_str(),
-            Some(pos) => &t3[..pos],
-        };
-        let t3b = match t3a.find(",") {
-            None => t3a,
-            Some(pos) => &t3a[..pos],
-        };
-        let t4 = self
-            .tag_fixes
-            .get(t3b)
-            .unwrap_or(&t3b.to_string())
+    fn fix_tag(&mut self, tag: &str, dist: &str) -> String {
+        let tag1 = self.fix_tag_algo(tag);
+        let (tag2, fixed) = self.fix_tag_fixes(&tag1, dist);
+        if fixed {
+            self.as_fixed.insert(tag1, tag2.clone());
+        } else {
+            self.as_unfixed.insert(tag1);
+        }
+        tag2
+    }
+    fn fix_tag_algo(&self, tag: &str) -> String {
+        // let t1 = tag
+        //     .to_lowercase()
+        //     .replace("saint ", " ")
+        //     .replace(" day", " ")
+        //     .replace("[^A-Za-z ]+", " ");
+        let t0 = self
+            .dash_re
+            .replace_all(&tag.to_lowercase(), " ")
+            .to_owned()
             .to_string();
-        let t5 = self
-            .extra_tag_fixes
-            .get(&(t4.clone() + dist))
-            .unwrap_or(&t4.clone())
-            .trim()
+        let t1: String = self
+            .phrase_sp_re
+            .replace_all(&t0, " ")
+            .to_owned()
             .to_string();
+        let t1a = self.phrase_re.replace_all(&t1, "");
+        let t2: String = self.bp_re.replace(&t1a, " ").to_owned().to_string();
+        //  let t3: String = self.the_re.replace(&t2, " ").to_owned().to_string();
+        let t4 = match t2.find(" – ") {
+            None => t2.as_str(),
+            Some(pos) => &t2[..pos],
+        };
+        let t5 = match t4.find(",") {
+            None => t4,
+            Some(pos) => &t4[..pos],
+        };
+        let t6 = self.white_re.replace_all(t5, " ");
+        let t7 = t6.trim();
         if self.verbose {
             println!(
                 "{}",
                 Green.on(Blue).paint(format!(
-                    "'{}' tidied '{}' > '{}' > '{}' > '{}' > '{}' > '{}'",
-                    tag, t2, t3, t3a, t3b, t4, t5
+                    "'{}' tidied > 0:'{}'  > 1:'{}'> 1a:'{}' > 2:'{}' > 4:'{}' > 5:'{}' > 6:'{}' > 7:'{}'",
+                    tag,t0, t1, t1a, t2, t4, t5, t6, t7
                 ))
             );
         }
-        t5
+        t7.to_string()
+    }
+    fn fix_tag_fixes(&self, tag: &str, dist: &str) -> (String, bool) {
+        let mut fixed = false;
+        if self.verbose {
+            print!("{}", Green.on(Blue).paint(format!("'{}' replaced", tag)));
+        }
+        let tr2o = self.tag_fixes.get(tag);
+        let tr2 = if let Some(tr2x) = tr2o {
+            fixed = true;
+            if self.verbose {
+                print!("{}", Green.on(Blue).paint(format!("  > '{}' ", tr2x)));
+            }
+            tr2x
+        } else {
+            tag
+        }
+        .to_string();
+        let tr3 = self
+            .extra_tag_fixes
+            .get(&(tr2.clone() + dist))
+            .unwrap_or(&tr2.clone())
+            .trim()
+            .to_string();
+        if self.verbose {
+            println!("{}", Green.on(Blue).paint(format!("   > '{}'", tr3)));
+        }
+        (tr3, fixed)
+    }
+    fn dump_used_fixed(&self) {
+        let ofx = self.base_dir.clone() + "/fixes-used.ron";
+        println!(
+            "{}",
+            Blue.on(Green)
+                .bold()
+                .paint(format!("writing tag use to {}", ofx))
+        );
+        let f = File::create(ofx).unwrap();
+        let mut bw = BufWriter::new(f);
+        let s = to_string_pretty(&self.as_fixed, ron::ser::PrettyConfig::default()).unwrap();
+        let _ = bw.write(s.as_bytes()).unwrap();
+        let s = to_string_pretty(&self.as_unfixed, ron::ser::PrettyConfig::default()).unwrap();
+        let _ = bw.write(s.as_bytes()).unwrap();
+        bw.flush().unwrap()
     }
 }
 fn get_map(file_name: &str) -> Result<HashMap<String, String>, calendar::CalendarError> {
     let reader = File::open(file_name).map_err(calendar::CalendarError::from_error)?;
     from_reader(reader).map_err(calendar::CalendarError::from_error)
 }
-
-fn get_cofe(mut holydays_data: &mut HolydaysData, base_dir: &str, verbose: bool) {
-    if let Some(cal_text) = get_input(&(base_dir.to_owned() + "/original/cofe.txt")) {
-        process_input(
-            &cal_text,
-            Province::ChurchOfEngland,
-            &mut holydays_data,
-            verbose,
-        );
-    }
-}
-fn get_hkskh(mut holydays_data: &mut HolydaysData, base_dir: &str, verbose: bool) {
-    if let Some(cal_text) = get_input(&(base_dir.to_owned() + "/original/hkskh.txt")) {
-        process_input(&cal_text, Province::HongKong, &mut holydays_data, verbose);
-    }
-}
-fn get_ecusa(mut holydays_data: &mut HolydaysData, base_dir: &str, verbose: bool) {
-    if let Some(cal_text) = get_input(&(base_dir.to_owned() + "/original/ecusa.txt")) {
-        process_input(&cal_text, Province::ECUSA, &mut holydays_data, verbose);
-    }
-}
-fn get_aca(mut holydays_data: &mut HolydaysData, base_dir: &str, verbose: bool) {
-    if let Some(cal_text) = get_input(&(base_dir.to_owned() + "/original/aca.txt")) {
-        process_input(&cal_text, Province::Australia, &mut holydays_data, verbose);
+fn get_province(
+    pd: &calendar::ProvinceData,
+    mut holydays_data: &mut HolydaysData,
+    base_dir: &str,
+    verbose: bool,
+) {
+    if let Some(cal_text) = get_input(&format!("{}/original/{}.txt", base_dir, pd.abbrev)) {
+        process_input(&cal_text, pd.province, &mut holydays_data, verbose);
     }
 }
 
@@ -298,8 +280,6 @@ fn get_input(file_name: &str) -> Option<String> {
             .bold()
             .paint(format!("---getting input {} ---", file_name))
     );
-    // Create a path to the desired file
-    //  let path = Path::new("../data/original/hkskh.txt");
     let path = Path::new(file_name);
     let display = path.display();
 
@@ -328,7 +308,7 @@ fn get_input(file_name: &str) -> Option<String> {
 }
 fn process_input(
     in_data: &str,
-    province: Province,
+    province: calendar::Province,
     holydays_data: &mut HolydaysData,
     verbose: bool,
 ) {
@@ -341,24 +321,22 @@ fn process_input(
         )
     }
     let head_re = Regex::new(r"^=+\s*([a-zA-Z ]+)\s*=+$").unwrap();
-    let fixed_re = Regex::new(r"^\*\s*([0-9]+)[:]?\s+('*)(.+)'*$").unwrap();
-    //  let fixed_re = Regex::new(r"^\*([0-9]+)\s+('*)([^']+)'*$").unwrap();
+    let fixed_re = match province {
+        calendar::Province::Canada => Regex::new(r"^\s*([0-9]+)[@]()(.+)$").unwrap(),
+        _ => Regex::new(r"^\*\s*([0-9]+)[:]?\s+('*)(.+)'*$").unwrap(),
+    };
     let moveable_re = Regex::new(r"^\*('*)\s*(.+)$").unwrap();
-    // let split_re = match province {
-    //     Province::HongKong => Regex::new(r"'*\s*[.]\s+").unwrap(),
-    //     _ => Regex::new(r"'*\s*[,]\s+").unwrap(),
-    // };
-    let split_re = Regex::new(r"'*\s*[@]\s+").unwrap();
+    let split_re = match province {
+        calendar::Province::Canada => Regex::new(r"\s*[@]\s*").unwrap(),
+        _ => Regex::new(r"'*\s*[@]\s*").unwrap(),
+    };
     let year_re = Regex::new(r"[0-9]").unwrap();
     let tidy_re = Regex::new(r"['\[\]]").unwrap();
     let tidy2_re = Regex::new(r" - .*$").unwrap();
-    //   let tag_fixes = tagfix::tag_fixes();
     let mut current_month: Option<u8> = None;
-    //  let divb = Yellow.paint("|");
-
-    //    let split_re = Regex::new(r"\s*[.,]\s+").unwrap();
+    let mut last_class: Option<calendar::HolydayClass> = None;
     for line in in_data.split('\n') {
-        let mut ok = false;
+        //   let mut ok = false;
         if let Some(cap) = head_re.captures(line) {
             if verbose {
                 print!("head");
@@ -373,12 +351,20 @@ fn process_input(
                         );
                     }
                     current_month = Some(month);
+                    last_class = None;
                 } else {
-                    println!(
-                        "{}",
-                        Red.bold()
-                            .paint(format!(" unknown header '{}'", cap1.as_str()))
-                    );
+                    match m_str {
+                        "Principal Feasts" | "Fasts" => {
+                            last_class = Some(calendar::HolydayClass::Principal)
+                        }
+                        "Feasts of Our Lord" => last_class = Some(calendar::HolydayClass::Festival),
+
+                        _ => println!(
+                            "{}",
+                            Red.bold()
+                                .paint(format!(" unknown header '{}'", cap1.as_str()))
+                        ),
+                    }
                 }
             }
             if verbose {
@@ -393,13 +379,15 @@ fn process_input(
             if let Some(cap1) = cap.get(1) {
                 day = cap1.as_str().parse::<u8>().unwrap();
                 if verbose {
-                    print!("{} ({})", cap1.as_str(), day);
+                    print!("({})", day);
                 }
                 if let Some(cap2) = cap.get(2) {
                     line_fmt = cap2.as_str().to_string();
                     if verbose {
                         print!("/-{}-", line_fmt);
                     }
+                } else {
+                    println!("{}", Red.bold().paint(format!("no first {}", line)));
                 }
             }
             if let Some(cap3) = cap.get(3) {
@@ -434,37 +422,74 @@ fn process_input(
                         &mut holyday,
                         &tidy_re,
                         &tidy2_re,
-                        &holydays_data,
+                        holydays_data,
                         verbose,
                     );
                 }
                 for s in split {
-                    if s != "" {
-                        if s.to_ascii_lowercase().contains("martyr") {
-                            holyday.martyr = true;
-                            if verbose {
-                                print!("{}", Red.bold().paint("(Martyr)"));
+                    let mut keep = true;
+                    if s == "" {
+                        continue;
+                    }
+                    if s.to_ascii_lowercase().contains("martyr") {
+                        holyday.martyr = true;
+                        if verbose {
+                            print!("{}", Red.bold().paint("(Martyr)"));
+                        }
+                    }
+                    if year_re.is_match(s) {
+                        if verbose {
+                            print!("{}date: {}", Yellow.bold().paint("|"), &s);
+                        }
+                        holyday.death_date = tidy(s, &tidy_re, &tidy2_re, &mut holyday.refs);
+                    } else {
+                    }
+                    if province == calendar::Province::Canada {
+                        let corr = s.to_ascii_lowercase().trim().to_string();
+                        match corr.as_str() {
+                            // TODO check Corpus Christi
+                            "pf" => {
+                                holyday.class = calendar::HolydayClass::Principal;
+                                keep = false
+                            }
+                            "hd" => {
+                                holyday.class = calendar::HolydayClass::Festival;
+                                keep = false
+                            }
+                            "mem" => {
+                                holyday.class = calendar::HolydayClass::LesserFestival;
+                                keep = false;
+                            }
+                            "com" => {
+                                holyday.class = calendar::HolydayClass::Commemoration;
+                                keep = false;
+                            }
+                            _ => {
+                                // println!(
+                                //     "{}",
+                                //     Yellow.bold().paint(format!(
+                                //         "canada not class '{}'->'{}'",
+                                //         s, &corr
+                                //     ))
+                                // );
                             }
                         }
-                        if year_re.is_match(s) {
-                            if verbose {
-                                print!("{}date: {}", Yellow.bold().paint("|"), &s);
-                            }
-                            holyday.death_date = tidy(s, &tidy_re, &tidy2_re, &mut holyday.refs);
-                        } else {
-                            if verbose {
-                                print!("{}{}", Yellow.bold().paint("|"), &s);
-                            }
-                            holyday
-                                .other
-                                .push(tidy(s, &tidy_re, &tidy2_re, &mut holyday.refs));
+                    }
+                    if keep {
+                        if verbose {
+                            print!("{}{}", Yellow.bold().paint("|"), &s);
                         }
+                        holyday
+                            .other
+                            .push(tidy(s, &tidy_re, &tidy2_re, &mut holyday.refs));
                     }
                 }
                 if verbose {
                     println!(")");
                 }
                 holydays_data.add(&mut holyday);
+            } else {
+                println!("{}", Red.bold().paint(format!("no third {}", line)));
             }
         } else if let Some(cap) = moveable_re.captures(line) {
             let mut holyday = Holyday {
@@ -505,7 +530,7 @@ fn process_input(
                     );
                 }
                 for s in split {
-                    ok = true;
+                    //           ok = true;
                     //      if s != "" {
                     holyday
                         .other
@@ -518,18 +543,21 @@ fn process_input(
             if verbose {
                 println!();
             }
-            if ok {
-                holydays_data.add(&mut holyday);
-            } else {
-                println!(
-                    "{}",
-                    Red.bold()
-                        .paint(format!("line not good - omitted: {}", line))
-                );
+            if let Some(c) = last_class {
+                holyday.class = c;
             }
+            //    if ok {
+            holydays_data.add(&mut holyday);
+        // } else {
+        //     println!(
+        //         "{}",
+        //         Red.bold()
+        //             .paint(format!("line not good - omitted: {}", line))
+        //     );
+        // }
         // }
         } else if line != "" {
-            println!("comment: {}", line);
+            println!("comment: {}", Yellow.bold().paint(line));
         }
     }
 }
@@ -539,7 +567,7 @@ fn head_for_holyday(
     holyday: &mut Holyday,
     tidy_re: &Regex,
     tidy2_re: &Regex,
-    data: &HolydaysData,
+    data: &mut HolydaysData,
     verbose: bool,
 ) {
     holyday.class = fmt_to_class(&head, &line_fmt);
@@ -624,106 +652,20 @@ fn string_to_month(s: &str) -> Option<u8> {
     }
 }
 fn report(holydays_data: &mut HolydaysData, opts: &Opt) {
-    let verbose = opts.verbose;
-    if opts.tag_list {
-        println!("{}", Green.on(Purple).bold().paint("tag report"));
-        let mut keys: Vec<&String> = holydays_data.tags.keys().collect();
-        keys.sort();
-        for k in keys {
-            let n = holydays_data.tags.get(k).unwrap();
-            println!("{} = {:?}", k, n);
-        }
-    }
-
-    if opts.date_report {
-        println!(
-            "{}",
-            Green.on(Purple).bold().paint("holyday report by date")
-        );
-        holydays_data
-            .holydays
-            .sort_by(|a, b| Holyday::cmp_by_date(a, b));
-        let mut last_date: Option<HolydayDate> = None;
-        for e in &holydays_data.holydays {
-            if Some(e.date) != last_date {
-                //  if verbose {
-                println!("{}", Green.bold().paint(format!("{:?}", e.date)));
-                //    }
-                last_date = Some(e.date);
-            }
-            //  if verbose {
-            println!(
-                "{} {}: {} {}",
-                Blue.bold().paint(format!("{}", e.tag)),
-                Yellow.paint(format!("{:?}", e.province)),
-                e.name,
-                e.source
-            );
-            //  }
-        }
-    }
-    if opts.tag_report {
-        println!("{}", Green.on(Purple).bold().paint("holyday report by tag"));
-        holydays_data
-            .holydays
-            .sort_by(|a, b| Holyday::cmp_by_tag(a, b));
-        let mut last_tag: Option<String> = None;
-        let mut prev: Option<Holyday> = None;
-        for e in &holydays_data.holydays {
-            let exp = Some(e.tag.clone());
-            if exp != last_tag {
-                if verbose {
-                    println!("{}", Green.bold().paint(format!("{:}", e.tag)));
-                }
-                last_tag = exp;
-                prev = None;
-            }
-            let problem = if let Some(p) = prev.clone() {
-                if e.tag == "" {
-                    println!("{}", Red.on(White).paint("no tag"));
-                    true
-                } else if p.date != e.date {
-                    println!(
-                        "{}",
-                        Red.on(White)
-                            .paint(format!("{} differ {}/{}", e.tag, p.date, e.date))
-                    );
-                    true
-                } else {
-                    false
-                }
-            } else {
-                false
-            };
-            if problem && !verbose {
-                if let Some(p) = prev.clone() {
-                    println!(
-                        " {}: {} {} {}",
-                        Yellow.bold().paint(format!("{:?}", p.province)),
-                        p.date,
-                        p.name,
-                        Cyan.paint(&p.source)
-                    );
-                }
-            }
-            if verbose || problem {
-                println!(
-                    " {}: {} {} {}",
-                    Yellow.bold().paint(format!("{:?}", e.province)),
-                    e.date,
-                    e.name,
-                    Cyan.paint(&e.source)
-                );
-            }
-            prev = Some(e.clone());
-        }
-    }
     if let Some(of) = &opts.out_file {
+        let mut cal = calendar::Calendar::new();
+        let descr = opts.descr.clone().unwrap_or("".to_string());
+        cal.info = calendar::FileInfo::new(&descr, "process data");
+        if let Some(p) = opts.province {
+            cal.province = p;
+        }
         println!(
             "{}",
-            Green.on(Purple).bold().paint("writing to calendar file")
+            Green.on(Purple).bold().paint(format!(
+                "writing to calendar data file, province {:?}, info {:?}",
+                cal.province, cal.info
+            ))
         );
-        let mut cal = calendar::Calendar::new();
         let f = File::create(of).unwrap();
         let mut bw = BufWriter::new(f);
         for e in &holydays_data.holydays {
@@ -753,7 +695,7 @@ fn report(holydays_data: &mut HolydaysData, opts: &Opt) {
                     HolydayDate::Moveable => calendar::DateCal::Easter,
                 },
                 class: e.class,
-                transfer: e.transfer,
+                transfer: e.transfer.clone(),
             };
             if opts.verbose {
                 println!("{:#?} / {:#?}", e, ce);
@@ -762,6 +704,7 @@ fn report(holydays_data: &mut HolydaysData, opts: &Opt) {
         }
         cal.write(&mut bw).unwrap();
     }
+    holydays_data.dump_used_fixed();
 }
 /*
 

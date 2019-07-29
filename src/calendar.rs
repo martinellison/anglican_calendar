@@ -1,23 +1,30 @@
-/*! This module covers the year-independent data for a calendar.  */
-//use serde::{Deserialize, Serialize};
-//use chrono::prelude::*;
+/*! Implements the year-independent data for a calendar.  */
+
 use ansi_term::Colour::*;
+use chrono::Utc;
 use ron::de::from_reader;
 use ron::ser::to_string_pretty;
 use serde_derive::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::collections::hash_map::Keys;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
 use std::fmt;
 use std::io;
 use std::rc::Rc;
+use std::str::FromStr;
 
 /** A [Calendar] contains the [Holyday]s for a 'province' e.g. the Anglican
 Church of Hong Kong. A Calendar is not specific to a specific year.*/
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct Calendar {
+    #[serde(default)]
+    /** info about the file */
+    pub info: FileInfo,
+    /** the province owning this calendar */
+    pub province: Province,
     holydays: Vec<HolydayRef>,
     #[serde(skip)]
     holydays_by_tag: HashMap<String, HolydayRef>,
@@ -27,6 +34,8 @@ pub type HolydayRef = Rc<RefCell<Holyday>>;
 impl Default for Calendar {
     fn default() -> Self {
         Self {
+            info: FileInfo::default(),
+            province: Province::Unknown,
             holydays: vec![],
             holydays_by_tag: HashMap::new(),
         }
@@ -49,6 +58,10 @@ impl Calendar {
         R: io::Read,
     {
         let mut u: Self = from_reader(reader).map_err(CalendarError::from_error)?;
+        println!(
+            "{}",
+            Green.paint(format!("reading calendar for {:?}", u.province))
+        );
         for r in &u.holydays {
             u.holydays_by_tag.insert(r.borrow().tag.clone(), r.clone());
         }
@@ -116,25 +129,134 @@ impl Calendar {
         ee.sort();
         ee
     }
-    // pub fn report_by_date(&self) {
-    //     println!("{}", Green.on(Purple).bold().paint("holyday report by date"));
-    //     let holydays = self.holydays.clone();
-    //     holydays.sort_by(|a, b| Holyday::cmp_by_date(&a.borrow(), &b.borrow()));
-    //     let mut last_date: Option<DateCal> = None;
-    //     for e in &holydays {
-    //         if Some(e.borrow().date_cal) != last_date {
-    //             println!("{}", Green.bold().paint(format!("{:?}", e.date_cal)));
-    //             last_date = Some(e.borrow().date_cal);
-    //         }
-    //         println!(
-    //             "{} {}: {} {}",
-    //             Blue.bold().paint(format!("{}", e.borrow().tag)),
-    //             Yellow.paint(format!("{:?}", e.borrow().province)),
-    //             e.borrow().title,
-    //             e.borrow().source
-    //         );
-    //     }
-    // }
+}
+/** Information about a file that can be used e.g. for tracking its origin. */
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+pub struct FileInfo {
+    description: String,
+    created: chrono::DateTime<Utc>,
+    creation: String,
+}
+//const VERBOSE: bool = true;
+/// whatever has a calendar
+#[derive(Eq, PartialEq, Hash, Debug, Clone, Copy, Serialize, Deserialize, Ord, PartialOrd)]
+pub enum Province {
+    ChurchOfEngland,
+    HongKong,
+    ECUSA,
+    Australia,
+    SouthAfrica,
+    Canada,
+    BCP,
+    Unknown,
+}
+impl FromStr for Province {
+    type Err = CalendarError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "cofe" | "en" => Ok(Province::ChurchOfEngland),
+            "hkskh" | "hk" => Ok(Province::HongKong),
+            "ecusa" | "tec" | "usa" | "us" => Ok(Province::ECUSA),
+            "aca" | "au" => Ok(Province::Australia),
+            "acsa" | "sa" => Ok(Province::SouthAfrica),
+            "acc" | "ca" => Ok(Province::Canada),
+            "bcp" => Ok(Province::BCP),
+            _ => Err(CalendarError::new(&format!("unknown province {}", &s))),
+        }
+    }
+}
+impl fmt::Display for Province {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Province::ChurchOfEngland => write!(f, "Church of England"),
+            _ => write!(f, "other"), // TODO other provinces
+        }
+    }
+}
+/** Data about a [Province] */
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProvinceData {
+    /** the province */
+    pub province: Province,
+    /** the abbreviation for the province, also used in file names */
+    pub abbrev: String,
+}
+impl ProvinceData {
+    fn make(province: Province, abbrev: &str) -> Self {
+        Self {
+            province,
+            abbrev: abbrev.to_string(),
+        }
+    }
+}
+/** List of all [Province]s and their [ProvinceData]
+
+```
+    use anglican_calendar::calendar::{ProvinceList, Province};
+    use std::str::FromStr;
+
+    let prov_list = ProvinceList::make();
+    for (prov,prov_data) in prov_list.all() {
+        assert_eq!(prov_data, prov_list.get(*prov));
+        assert_eq!(*prov,prov_data.province);
+        assert_eq!(Province::from_str(&prov_data.abbrev).unwrap(), *prov);
+    }
+```
+*/
+pub struct ProvinceList {
+    provinces: HashMap<Province, ProvinceData>,
+}
+impl ProvinceList {
+    fn add(&mut self, province: Province, abbrev: &str) {
+        self.provinces
+            .insert(province, ProvinceData::make(province, abbrev));
+    }
+    /** returns the [ProvinceList] */
+    pub fn make() -> Self {
+        let mut pl = Self {
+            provinces: HashMap::new(),
+        };
+        pl.add(Province::ChurchOfEngland, "cofe");
+        pl.add(Province::HongKong, "hkskh");
+        pl.add(Province::ECUSA, "ecusa");
+        pl.add(Province::Australia, "aca");
+        pl.add(Province::SouthAfrica, "acsa");
+        pl.add(Province::Canada, "acc");
+        pl.add(Province::BCP, "bcp");
+        pl
+    }
+    /** gets the data for one [Province] */
+    pub fn get(&self, province: Province) -> &ProvinceData {
+        self.provinces.get(&province).unwrap()
+    }
+    /** all the provinces */
+    pub fn all(&self) -> &HashMap<Province, ProvinceData> {
+        &self.provinces
+    }
+}
+impl FileInfo {
+    /** create a FileInfo with the specified values */
+    pub fn new(description: &str, creation: &str) -> Self {
+        Self {
+            description: description.to_string(),
+            created: chrono::Utc::now(),
+            creation: creation.to_string(),
+        }
+    }
+    /** set the creation string */
+    pub fn set_creation(&mut self, creation: &str) {
+        self.creation = creation.to_string()
+    }
+}
+impl Default for FileInfo {
+    fn default() -> Self {
+        Self {
+            description: "".to_string(),
+            created: chrono::Utc::now(),
+            creation: "".to_string(),
+        }
+    }
 }
 /** An Holy Day is an holy day in a [Calendar] e.g. the holy days of the Anglican
 Church of Hong Kong include Easter Sunday and Matteo Ricci.*/
@@ -163,7 +285,8 @@ pub struct Holyday {
     pub has_eve: bool,
     /** date calculation */
     pub date_cal: DateCal,
-    /** whether and how the holy day can be transferred to another date */
+    /** whether and how the holy day must be transferred to another
+    date or dropped */
     pub transfer: TransferType,
 }
 impl Holyday {
@@ -194,17 +317,9 @@ impl Holyday {
             self.date_cal = c.clone();
         }
         if let Some(t) = &m.transfer {
-            self.transfer = *t;
+            self.transfer = t.clone();
         }
     }
-    // fn cmp_by_date(a: &Self, b: &Self) -> Ordering {
-    //     let c = a.date_cal.cmp(&b.date_cal);
-    //     if c == Ordering::Equal {
-    //         a.tag.cmp(&b.tag)
-    //     } else {
-    //         c
-    //     }
-    // }
 }
 impl Ord for Holyday {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -244,7 +359,9 @@ impl Default for Holyday {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 /** EdMods is a set of edit changes to an [Calendar]. */
 pub struct EdMods {
-    /** the [EdMod]s in this EdMods */
+    #[serde(default)]
+    info: FileInfo,
+    /** the [HolydayMod]s in this EdMods */
     pub holydays: Vec<HolydayMod>,
 }
 impl EdMods {
@@ -255,13 +372,17 @@ impl EdMods {
     {
         println!("{}", Green.paint("reading edits"));
         let u: Self = from_reader(reader).map_err(CalendarError::from_error)?;
-        println!("{}", Green.paint("read from reader done"));
+        println!(
+            "{}",
+            Green.paint(format!("modifications read from reader with {:?}", u.info))
+        );
         Ok(u)
     }
 }
 impl From<&mut Calendar> for EdMods {
     fn from(c: &mut Calendar) -> Self {
         Self {
+            info: c.info.clone(),
             holydays: c
                 .holydays
                 .iter_mut()
@@ -315,42 +436,44 @@ pub struct HolydayMod {
 impl HolydayMod {
     /** convert an EdMod to an [Holyday]. All fields must be specified. */
     pub fn to_holyday(&self) -> Result<Holyday, CalendarError> {
-        let title = self
-            .clone()
-            .title
-            .ok_or_else(|| CalendarError::new(&format!("no title ({:?})", self.tag)))?;
+        let title = self.clone().title.ok_or_else(|| {
+            CalendarError::new(&format!(
+                "adding holy day and field not specified - title, check that the edit tag ({:?}) is found in a calendar",
+                self.tag
+            ))
+        })?;
         let e = Holyday {
             title: title.clone(),
             description: self.clone().description.unwrap_or(title.clone()),
-            main: self
-                .main
-                .clone()
-                .ok_or_else(|| CalendarError::new("no main"))?,
-            other: self
-                .other
-                .clone()
-                .ok_or_else(|| CalendarError::new("no other "))?,
+            main: self.main.clone().ok_or_else(|| {
+                CalendarError::new("adding holy day and field not specified -  main")
+            })?,
+            other: self.other.clone().ok_or_else(|| {
+                CalendarError::new("adding holy day and field not specified -  other ")
+            })?,
             death: self.death.clone().unwrap_or("".to_string()),
-            refs: self
-                .refs
-                .clone()
-                .ok_or_else(|| CalendarError::new("no refs"))?,
+            refs: self.refs.clone().ok_or_else(|| {
+                CalendarError::new("adding holy day and field not specified -  refs")
+            })?,
             class: self
                 .class
                 //    .clone()
-                .ok_or_else(|| CalendarError::new("no class "))?,
+                .ok_or_else(|| {
+                    CalendarError::new("adding holy day and field not specified -  class ")
+                })?,
             tag: self.tag.clone(),
-            has_eve: self
-                .has_eve
-                .ok_or_else(|| CalendarError::new("no has_eve"))?,
+            has_eve: self.has_eve.ok_or_else(|| {
+                CalendarError::new("adding holy day and field not specified -  has_eve")
+            })?,
             date_cal: self
                 .date_cal
-                .clone() // ignore clippy
-                .ok_or_else(|| CalendarError::new("no date_cal "))?,
-            transfer: self
-                .transfer
-                .clone()
-                .ok_or_else(|| CalendarError::new("no transfer "))?,
+                .clone() // igadding holy day and field not specified - re clippy
+                .ok_or_else(|| {
+                    CalendarError::new("adding holy day and field not specified -  date_cal ")
+                })?,
+            transfer: self.transfer.clone().ok_or_else(|| {
+                CalendarError::new("adding holy day and field not specified -  transfer ")
+            })?,
         };
         Ok(e)
     }
@@ -411,8 +534,13 @@ pub enum HolydayClass {
     CorpusChristi,
     Principal,
 }
+impl fmt::Display for HolydayClass {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
+}
 /** DateCal is instructions to calculate a date e.g. 25 Dec, 2 days before Easter Sunday. */
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd, Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash)]
 pub enum DateCal {
     /** Easter Sunday */
     Easter,
@@ -435,7 +563,7 @@ pub enum DateCal {
     calendar year (depending on the date relative to Advent). */
     Fixed { month: u8, day: u8 },
 }
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash)]
 /** a [chrono::Weekday] with an ordering, so it can be part of a
 sortable object. The actual order does not matter. */
 pub struct OrderableDayOfWeek {
@@ -467,8 +595,8 @@ impl From<OrderableDayOfWeek> for chrono::Weekday {
 }
 
 /** TransferType indicates whether and how an holy day can be transferred
-to another date */
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone)]
+to another date or dropped */
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub enum TransferType {
     /** follow the usual rules using the holy day's [HolydayClass] */
     Normal,
@@ -481,8 +609,10 @@ pub enum TransferType {
     George,
     /** special rule for Mark  */
     Mark,
+    /** must occur before the specified date, otherwise drop */
+    Before(DateCal),
 }
-/** MainAttribute  */
+/** A principal attribute of a [Holyday] (at preseent only [MainAttribute::Martyr])   */
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum MainAttribute {
     Martyr,
@@ -519,8 +649,8 @@ impl Reference {
         }
     }
     /** the URL for the Reference */
-    pub fn url(self) -> String {
-        self.website.prefix() + &self.article
+    pub fn url(&self) -> String {
+        (self.website.prefix() + &self.article).clone()
     }
 }
 /** WebSite is a web site that contains relevant information.  */
@@ -545,6 +675,39 @@ pub enum Season {
     Lent,
     Easter,
     Ordinary,
+}
+/** the colour for a [Holyday] */
+#[derive(Debug, Copy, Clone)]
+pub enum SeasonColour {
+    White,
+    Red,
+    Purple,
+    Green,
+}
+impl SeasonColour {
+    /** colour for HTML */
+    pub fn colour_a(&self) -> String {
+        match self {
+            SeasonColour::White => "white",
+            SeasonColour::Red => "red",
+            SeasonColour::Purple => "purple",
+            SeasonColour::Green => "green",
+        }
+        .to_string()
+    }
+    /** colour for HTML */
+    pub fn colour_b(&self) -> String {
+        match self {
+            SeasonColour::White => "black",
+            _ => "white",
+        }
+        .to_string()
+    }
+}
+impl fmt::Display for SeasonColour {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
 }
 /** A CalendarError is an [Error] which can be used in this crate.  */
 #[derive(Debug, Clone)]
@@ -584,6 +747,76 @@ impl fmt::Display for CalendarError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "error in calendar {}", self.msg)
     }
+}
+/** list all [ProvHolyday]s, grouped by date, for reports */
+#[derive(Default, Debug)]
+pub struct ProvHolydaysByDate {
+    phbd: HashMap<DateCal, Vec<ProvHolyday>>,
+}
+impl ProvHolydaysByDate {
+    /** load all the [Holyday]s from a [Calendar] */
+    pub fn load_calendar(&mut self, cal: &Calendar) {
+        for hd in cal.get_holydays() {
+            let ph = ProvHolyday {
+                province: cal.province,
+                holyday: hd.clone(),
+            };
+            let dc = &hd.borrow().date_cal;
+            if let Some(vph) = self.phbd.get_mut(&dc) {
+                vph.push(ph);
+            } else {
+                let nvph = vec![ph];
+                self.phbd.insert(dc.clone(), nvph);
+            }
+        }
+    }
+    /** get all the dates with  [Holyday]s */
+    pub fn dates(&self) -> Keys<DateCal, Vec<ProvHolyday>> {
+        self.phbd.keys()
+    }
+    /** get the   [ProvHolyday]s for a date */
+    pub fn by_date(&self, date: DateCal) -> impl Iterator<Item = &ProvHolyday> {
+        self.phbd.get(&date).unwrap().into_iter()
+    }
+}
+/**  list all [ProvHolyday]s, grouped by tag, for reports */
+#[derive(Default, Debug)]
+pub struct ProvHolydaysByTag {
+    phbt: HashMap<String, Vec<ProvHolyday>>,
+}
+impl ProvHolydaysByTag {
+    /** load all the [Holyday]s from a [Calendar] */
+    pub fn load_calendar(&mut self, cal: &Calendar) {
+        for hd in cal.get_holydays() {
+            let ph = ProvHolyday {
+                province: cal.province,
+                holyday: hd.clone(),
+            };
+            let tag = &hd.borrow().tag;
+            if let Some(vph) = self.phbt.get_mut(tag) {
+                vph.push(ph);
+            } else {
+                let nvph = vec![ph];
+                self.phbt.insert(tag.to_string(), nvph);
+            }
+        }
+    }
+    /**  get all the tags with  [Holyday]s */
+    pub fn tags(&self) -> Keys<String, Vec<ProvHolyday>> {
+        self.phbt.keys()
+    }
+    /**  get the   [ProvHolyday]s for a tag */
+    pub fn by_tag(&self, tag: String) -> impl Iterator<Item = &ProvHolyday> {
+        self.phbt.get(&tag).unwrap().into_iter()
+    }
+}
+/** a [Holyday] in a specific [Calendar] (identified by its [Province]) */
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Ord, PartialOrd)]
+pub struct ProvHolyday {
+    /** the province */
+    pub province: Province,
+    /** the holy day */
+    pub holyday: HolydayRef,
 }
 // #[cfg(test)]
 // mod tests {
