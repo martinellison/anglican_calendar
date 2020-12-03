@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# copy files into GitHub repo so we can push them and make a new release
 LOCAL=$HOME/git/anglican_calendar
 GITHUB=$HOME/extgit/anglican_calendar
 
@@ -16,8 +17,10 @@ echo "copying scripts..."
 cp -R $LOCAL/scripts $GITHUB
 echo "copying edit_data..."
 cp -R $LOCAL/edit_data $GITHUB
-echo "copying process_data..."
-cp -R $LOCAL/process_data $GITHUB
+#rm -rf $GITHUB/edit_data
+# echo "copying process_data..."
+# cp -R $LOCAL/process_data $GITHUB
+rm -rf $GITHUB/process_data
 echo "copying final data..."
 cp -R $LOCAL/data/final $GITHUB/data
 echo "copying reports..."

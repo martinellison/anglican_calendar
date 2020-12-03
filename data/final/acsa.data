@@ -1,7 +1,7 @@
 (
     info: (
         description: "added feasts",
-        created: "2019-07-29T04:36:22.706494860Z",
+        created: "2020-09-28T04:42:55.739395293Z",
         creation: "edit data",
     ),
     province: SouthAfrica,
@@ -257,6 +257,20 @@
             has_eve: false,
             date_cal: Easter,
             transfer: Normal,
+        ),
+        (
+            title: "Advent Sunday",
+            description: "Advent",
+            main: [],
+            other: [
+            ],
+            death: "",
+            refs: [],
+            class: Sunday,
+            tag: "advent",
+            has_eve: false,
+            date_cal: AdventNext,
+            transfer: DoNotTransfer,
         ),
         (
             title: "The Holy Name of Jesus: The circumcision of Christ",

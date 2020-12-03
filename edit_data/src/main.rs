@@ -37,7 +37,9 @@ fn main() {
     println!("{}", Green.paint("done"));
 }
 fn run() -> Result<(), calendar::CalendarError> {
+    // println!("getting opts...");
     let opt = Opt::from_args();
+    //  println!("got opts {:?}", &opt);
     let mut cal: Option<calendar::Calendar> = None;
     let is_editing = opt.in_file.is_some() && opt.out_file.is_some();
     if opt.in_file.is_some() {
@@ -49,13 +51,18 @@ fn run() -> Result<(), calendar::CalendarError> {
         let inf = File::open(&infn).map_err(calendar::CalendarError::from_error)?;
         let mut br = BufReader::new(inf);
         let mut read_cal = calendar::Calendar::read(&mut br)?;
+        println!("calendar read");
+        // write calendar as pretty if required
         if let Some(p) = &opt.pretty {
+            println!("pretty printing");
             let pifn = format!("{}.{}", &infn, &p);
             let mut bwb = open_out_file(&pifn)?;
             let mut bw = bwb.as_mut();
             read_cal.write(&mut bw).unwrap()
         }
+        // convert to edits if required
         if let Some(a) = &opt.as_edits {
+            println!("converting to edits");
             let aifn = format!("{}.{}", &infn, &a);
             let mut bwb = open_out_file(&aifn)?;
             let bw = bwb.as_mut();
@@ -68,6 +75,7 @@ fn run() -> Result<(), calendar::CalendarError> {
     }
 
     for ef in opt.edit_files {
+        // apply edits
         println!("{}", Green.paint(format!("reading edits {}", &ef)));
         let edf = File::open(&ef).map_err(calendar::CalendarError::from_error)?;
         let mut ebr = BufReader::new(edf);
@@ -77,13 +85,36 @@ fn run() -> Result<(), calendar::CalendarError> {
         if let Some(c) = &mut cal {
             c.apply(&eds)?;
         }
+        // write edits as pretty if required
         if let Some(p) = &opt.pretty {
+            println!("pretty printing");
             let pefn = format!("{}.{}", &ef, &p);
             let s = to_string_pretty(&eds, ron::ser::PrettyConfig::default()).unwrap();
             let mut bwb = open_out_file(&pefn)?;
             let bw = bwb.as_mut();
             let _ = bw.write(s.as_bytes()).unwrap();
             bw.flush().unwrap()
+        }
+    }
+    match opt.sort {
+        calendar::HolydaySort::NoSort => {}
+        calendar::HolydaySort::Normal => {
+            println!("sorting normally");
+            if let Some(c) = &mut cal {
+                c.sort();
+            }
+        }
+        calendar::HolydaySort::DateCal => {
+            println!("sorting by date");
+            if let Some(c) = &mut cal {
+                c.sort_by_date_cal();
+            }
+        }
+        calendar::HolydaySort::Tag => {
+            println!("sorting by yag");
+            if let Some(c) = &mut cal {
+                c.sort_by_tag();
+            }
         }
     }
 
@@ -95,6 +126,7 @@ fn run() -> Result<(), calendar::CalendarError> {
                 &opt.out_file.clone().unwrap()
             ))
         );
+        // write calendar
         let mut bwb = open_out_file(opt.out_file.unwrap().as_str())?;
         let mut bw = bwb.as_mut();
         if let Some(mut c) = cal {
@@ -103,9 +135,10 @@ fn run() -> Result<(), calendar::CalendarError> {
             c.write(&mut bw).unwrap()
         }
     }
+    println!("done");
     Ok(())
 }
-fn open_out_file(fpath: &str) -> Result<Box<Write>, calendar::CalendarError> {
+fn open_out_file(fpath: &str) -> Result<Box<dyn Write>, calendar::CalendarError> {
     let of = File::create(fpath).map_err(calendar::CalendarError::from_error)?;
     Ok(Box::new(BufWriter::new(of)))
 }
@@ -114,13 +147,13 @@ fn open_out_file(fpath: &str) -> Result<Box<Write>, calendar::CalendarError> {
 #[structopt(name = "", about = "Edit calendars")]
 /// Options from the command line
 pub struct Opt {
-    /// Input calendar data file    
+    /// Input calendar data file
     #[structopt(short = "i", long = "input")]
     in_file: Option<String>,
-    /// Input calendar edit file    
+    /// Input calendar edit file
     #[structopt(short = "e", long = "edit")]
     edit_files: Vec<String>,
-    /// Output calendar data file    
+    /// Output calendar data file
     #[structopt(short = "o", long = "output")]
     out_file: Option<String>,
     /// Pretty suffix -- used to pretty-print inputs
@@ -132,6 +165,9 @@ pub struct Opt {
     /// Description for output file
     #[structopt(short = "d", long = "descr")]
     descr: Option<String>,
+    /// Sort calendar data for output Normal/DateCal
+    #[structopt(short = "s", long = "sort", default_value)]
+    sort: calendar::HolydaySort,
 }
 /*
 
