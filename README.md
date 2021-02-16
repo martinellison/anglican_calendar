@@ -56,12 +56,23 @@ There are generated calendars in the `data/cals` directory. Most
 calendar programs have some way of loading these files into your
 calendar. You want to load a file with a name like `cofe-2019.ical`.
 
-Note that there may be a way to subscribe to a calendar over the
-internet, so if someone can set this up it may be the best solution.
-
 Note: aca = Anglican Church of Australia, cofe = Church of England,
 ecusa = Episcopal Church of the United States of America, hkskh =
 Anglican Church of Hong Kong.
+
+### How to add a new calendar to Google Calendar from URL
+
+You can use the GitHub raw links for each ICAL file to add a new calendar to Google Calendar. This will add a separate calendar which you can toggle or delete as required, without affecting your other calendars.
+
+1. Obtain a link to the calendar of your choice by navigating to the file in the `data/cals` directory in the GitHub web UI, then clicking "Raw". You may want to use a particular commit, in case the file paths change in the future. For example, the C of E 2021 calendar link for d4c502a is:
+https://raw.githubusercontent.com/martinellison/anglican_calendar/d4c502a8469f67d7e010927a9876e0b1e1781e01/data/cals/cofe-2021.ical
+
+2. In Google Calendar, navigate to **Other calendars** -> **Add other calendars (+)** -> **From URL**.
+
+3. Enter the URL from step 1 and click **Add calendar**
+
+Google Calendar reloads the calendar from the URL every few hours, so if you use an URL like the following, the events may change:
+https://raw.githubusercontent.com/martinellison/anglican_calendar/release/data/cals/cofe-2021.ical
 
 ### How to cancel these holy days out of your calendar
 
