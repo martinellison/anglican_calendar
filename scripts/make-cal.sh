@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+echo "TODO rewrite to use spreadsheet"
 
 # make a single calendar from its data file
 P=$1

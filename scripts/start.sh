@@ -16,24 +16,21 @@ else
     esac
     cd $BASE
     rustup default stable
+    codium anglican_calendar.code-workspace
     case $MACHINE in
-    xiaosan) $BASE/scripts/update.sh ;;
+        xiaosan) $BASE/scripts/update.sh ;;
     esac
     echo "pulling from git..."
     git pull
     echo "updating crates..."
-    cargo upgrade --workspace
-    cargo update --aggressive
-    for D in $(ls); do
-        if [[ -f $BASE/$D/Cargo.toml ]]; then
-            cd $BASE/$D/
-            cargo upgrade --workspace
-            cargo update --aggressive
-        fi
-    done
+       cargo upgrade --incompatible
     echo "fixing..."
-    cargo fix --allow-dirty
-    cargo fmt
+    cargo +nightly fix --allow-dirty --allow-staged
+    echo "clipping..."
+    cargo clippy --fix --all-targets --allow-dirty --allow-staged
+    echo "formatting..."
+    cargo +nightly fmt
+
     echo "building..."
     cd $BASE
     export PATH=$PATH:$BASE/scripts:$BASE/target/debug

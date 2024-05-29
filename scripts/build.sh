@@ -1,36 +1,37 @@
 #!/usr/bin/env bash
 # reset
+
+TARG=$1
 export BASE=$(git rev-parse --show-toplevel)
 if [[ "$BASE" == "" ]]; then
     echo "need to be in the git repository"
     exit 1
 fi
 cd $BASE
-echo "formatting..."
-cargo fmt --all
-echo "building..."
-cargo build
-RES=$?
-if [[ $RES != 0 ]]; then
-    echo "build result" $RES
-    exit 2
+case "$TARG" in
+    release)
+        TARGOPT="--release"
+        echo "building release..."
+        ;;
+    debug | "")
+        TARGOPT=""
+        echo "building debug..."
+        ;;
+    *)
+        echo "unknown target" $TARG
+        exit 1
+esac
+export BASE=$(git rev-parse --show-toplevel)
+if [[ "$BASE" == "" ]]; then
+    echo "need to be in the git repository"
+    exit 1
 fi
-echo "testing..."
-cargo test
-
-for D in edit_data reports; do
-    echo "building" $D
-    if [[ ! -d $BASE/$SD ]]; then
-        echo $SD "does not exist to be built"
-    fi
-    cd $BASE/$D
-    cargo fmt
-    cargo build
-    RES=$?
-    if [[ $RES != 0 ]]; then
-        echo "build result" $RES
-        exit 3
-    fi
-done
+echo 'building...'
+cargo build $TARGOPT
+if [[ "$TARG" == "release" ]]; then
+    mkdir -p $BASE/bin
+    TARGDIR=$BASE/target/release
+    mv $TARGDIR/calendar $TARGDIR//edit_data $TARGDIR/reports $BASE/bin
+fi
 
 echo "build complete"

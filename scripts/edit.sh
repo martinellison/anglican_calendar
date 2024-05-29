@@ -6,4 +6,4 @@ if [[ "$BASE" == "" ]]; then
     exit 1
 fi
 cd $BASE
-/usr/bin/code $BASE/anglican_calendar.code-workspace &
+/usr/bin/codium/ $BASE/anglican_calendar.code-workspace &

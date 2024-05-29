@@ -1,4 +1,6 @@
-/*! This program can be used to edit the input data.
+/*! This program is part of Anglican Calendar.
+ *
+This program can be used to edit the input data.
 
 There are several kinds of edits that are possible.
 
@@ -16,45 +18,66 @@ Ther are two file formats:
 * edit files
 
 Check the command line options for the specific details of how to carry out these edits. */
-extern crate anglican_calendar;
-extern crate structopt;
+// extern crate anglican_calendar;
+// extern crate structopt;
 //use crate::calendar;
-use anglican_calendar::calendar;
+use ::calendar::calendar::CalendarError;
 use ansi_term::Colour::*;
+use calendar::calendar;
+use log::debug;
 use ron::ser::to_string_pretty;
 //use std::error::Error;
-use std::fs::File;
-use std::io::Write;
-use std::io::{BufReader, BufWriter};
+use simplelog::{LevelFilter, SimpleLogger};
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter, Write},
+    path::Path,
+};
 use structopt::StructOpt;
 
 fn main() {
-    println!("Copyright ©2019 Martin Ellison. This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under the GPL3 licence; see the README file for details.");
+    println!(
+        "Copyright ©2019-2024 Martin Ellison. This program comes with ABSOLUTELY NO WARRANTY. \
+         This is free software, and you are welcome to redistribute it under the GPL3 licence; \
+         see the README file for details."
+    );
     if let Err(e) = run() {
         println!("failed because {:?}", e);
         panic!("failed");
     }
-    println!("{}", Green.paint("done"));
+    debug!("{}", Green.paint("done"));
 }
 fn run() -> Result<(), calendar::CalendarError> {
-    // println!("getting opts...");
+    // debug!("getting opts...");
     let opt = Opt::from_args();
-    //  println!("got opts {:?}", &opt);
+    if opt.verbose {
+        SimpleLogger::init(LevelFilter::Trace, simplelog::Config::default())
+            .map_err(|err| CalendarError::new(&format!("error when starting logger: {err}")))?;
+        debug!("options: {:?}", opt);
+        debug!("running engine with webview...");
+    }
+    //  debug!("got opts {:?}", &opt);
     let mut cal: Option<calendar::Calendar> = None;
     let is_editing = opt.in_file.is_some() && opt.out_file.is_some();
     if opt.in_file.is_some() {
-        println!(
+        debug!(
             "{}",
             Green.paint(format!("reading calendar {}", opt.in_file.clone().unwrap()))
         );
+
         let infn = opt.in_file.unwrap();
-        let inf = File::open(&infn).map_err(calendar::CalendarError::from_error)?;
-        let mut br = BufReader::new(inf);
-        let mut read_cal = calendar::Calendar::read(&mut br)?;
-        println!("calendar read");
+        let mut read_cal = if opt.from_spreadsheet {
+            calendar::from_spreadsheet::read_from_spreadsheet(Path::new(&infn))?
+        } else {
+            let inf = File::open(&infn).map_err(calendar::CalendarError::from_error)?;
+            let mut br = BufReader::new(inf);
+            calendar::Calendar::read(&mut br)?
+        };
+        read_cal.clean_up();
+        debug!("calendar read");
         // write calendar as pretty if required
         if let Some(p) = &opt.pretty {
-            println!("pretty printing");
+            debug!("pretty printing");
             let pifn = format!("{}.{}", &infn, &p);
             let mut bwb = open_out_file(&pifn)?;
             let mut bw = bwb.as_mut();
@@ -62,7 +85,7 @@ fn run() -> Result<(), calendar::CalendarError> {
         }
         // convert to edits if required
         if let Some(a) = &opt.as_edits {
-            println!("converting to edits");
+            debug!("converting to edits");
             let aifn = format!("{}.{}", &infn, &a);
             let mut bwb = open_out_file(&aifn)?;
             let bw = bwb.as_mut();
@@ -76,18 +99,18 @@ fn run() -> Result<(), calendar::CalendarError> {
 
     for ef in opt.edit_files {
         // apply edits
-        println!("{}", Green.paint(format!("reading edits {}", &ef)));
+        debug!("{}", Green.paint(format!("reading edits {}", &ef)));
         let edf = File::open(&ef).map_err(calendar::CalendarError::from_error)?;
         let mut ebr = BufReader::new(edf);
-        println!("{}", Green.paint("interpreting edits"));
+        debug!("{}", Green.paint("interpreting edits"));
         let eds = calendar::EdMods::read(&mut ebr)?;
-        println!("{}", Green.paint("applying edits"));
+        debug!("{}", Green.paint("applying edits"));
         if let Some(c) = &mut cal {
             c.apply(&eds)?;
         }
         // write edits as pretty if required
         if let Some(p) = &opt.pretty {
-            println!("pretty printing");
+            debug!("pretty printing");
             let pefn = format!("{}.{}", &ef, &p);
             let s = to_string_pretty(&eds, ron::ser::PrettyConfig::default()).unwrap();
             let mut bwb = open_out_file(&pefn)?;
@@ -97,29 +120,29 @@ fn run() -> Result<(), calendar::CalendarError> {
         }
     }
     match opt.sort {
-        calendar::HolydaySort::NoSort => {}
+        calendar::HolydaySort::NoSort => {},
         calendar::HolydaySort::Normal => {
-            println!("sorting normally");
+            debug!("sorting normally");
             if let Some(c) = &mut cal {
                 c.sort();
             }
-        }
+        },
         calendar::HolydaySort::DateCal => {
-            println!("sorting by date");
+            debug!("sorting by date");
             if let Some(c) = &mut cal {
                 c.sort_by_date_cal();
             }
-        }
+        },
         calendar::HolydaySort::Tag => {
-            println!("sorting by yag");
+            debug!("sorting by tag");
             if let Some(c) = &mut cal {
                 c.sort_by_tag();
             }
-        }
+        },
     }
 
     if is_editing {
-        println!(
+        debug!(
             "{}",
             Green.paint(format!(
                 "writing as edited {}",
@@ -127,15 +150,23 @@ fn run() -> Result<(), calendar::CalendarError> {
             ))
         );
         // write calendar
-        let mut bwb = open_out_file(opt.out_file.unwrap().as_str())?;
+        let mut bwb = open_out_file(opt.out_file.clone().unwrap().as_str())?;
         let mut bw = bwb.as_mut();
-        if let Some(mut c) = cal {
+        if let Some(c) = &mut cal {
             let descr = opt.descr.clone().unwrap_or("".to_string());
             c.info = calendar::FileInfo::new(&descr, "edit data");
             c.write(&mut bw).unwrap()
         }
     }
-    println!("done");
+    if opt.to_spreadsheet && opt.out_file.as_ref().is_some() {
+        if let Some(c) = &mut cal {
+            {
+                c.write_to_spreadsheet(Path::new(&opt.out_file.unwrap()))
+                    .unwrap();
+            }
+        }
+    }
+    debug!("done");
     Ok(())
 }
 fn open_out_file(fpath: &str) -> Result<Box<dyn Write>, calendar::CalendarError> {
@@ -168,10 +199,19 @@ pub struct Opt {
     /// Sort calendar data for output Normal/DateCal
     #[structopt(short = "s", long = "sort", default_value)]
     sort: calendar::HolydaySort,
+    /// read from a spreadsheet
+    #[structopt(short = "f", long = "from_spread")]
+    from_spreadsheet: bool,
+    /// write to a spreadsheet
+    #[structopt(short = "t", long = "to_spread")]
+    to_spreadsheet: bool,
+    /// Whether to show extra debug trace
+    #[structopt(short, long)]
+    verbose: bool,
 }
 /*
 
-Copyright ©2019 Martin Ellison.  This program is free software: you
+Copyright ©2019-2024 Martin Ellison.  This program is free software: you
 can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation,
 either version 3 of the License, or (at your option) any later

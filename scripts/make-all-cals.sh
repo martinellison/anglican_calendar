@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # generate all calendars
+echo "TODO rewrite to use spreadsheet"
 YEAR=${1-2021}
 
 export BASE=$(git rev-parse --show-toplevel)

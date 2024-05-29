@@ -1,0 +1,30 @@
+<html>
+
+<head>
+    <style> 
+  /*   https://paletton.com/#uid=7001O0kllllaFw0g0qFqFg0w0aF */
+        div.white {background-color: white; color: black;}
+        div.red {background-color: #ffaaaa; color: #550000}; 
+        div.purple {background-color: #9476ab; color: #220439}
+        div.green {background-color: g#88cc88; color: #004400}
+    </style>
+</head>
+
+<body>
+    <h1>Calendar for {{ province }} for {{ year }} </h1>
+    {% for date in dates %}
+    <div class={{date.colour_a}}>
+        <h2>{{date.date_form}}</h2>
+        {% for holyday in date.holydays %}
+            <p><b> {{ holyday.title }} </b> {{ holyday.class_format }} {{ holyday.death}}
+            {% for attr in holyday.attrs %} {{ attr -}} {% endfor %}
+            {% for o in holyday.other %} {{ o -}} {% endfor %}
+            {% for r in holyday.refs_format -%}
+                <i>see</i> <a href="https://{{r.0}}"> {{r.1}} </a>
+            {% endfor %}
+        {% endfor %}
+        </div>
+    {% endfor %}
+</body>
+
+</html>

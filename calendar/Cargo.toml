@@ -1,0 +1,36 @@
+[package]
+name = "calendar"
+version = "0.2.0"
+authors = ["martin <m.e@acm.org>"]
+edition = "2021"
+description = "Calculates the holy days of a calendar of an Anglican church for a given year"
+repository = "github.com/martinellison/anglican_calendar"
+readme="README.md"
+keywords=["religious", "anglican", "calendar"]
+license="GPL3"
+
+[badges]
+
+maintenance = { status = "experimental" }
+
+[dependencies]
+ansi_term = "0.12.1"
+askama = "0.12.1"
+calamine = { version ="0.25.0", features = ["chrono"]}
+chrono = { version = "0.4.38", features = ["serde"] }
+color-backtrace = "0.6.1"
+convert_case = "0.6.0"
+delegate = "0.12.0"
+enum-utils = "0.1.2"
+getset = "0.1.2"
+icalendar = "0.16.1"
+itertools = "0.13.0"
+log = "0.4.21"
+ron = "0.8.1"
+rust_xlsxwriter = { version = "0.64.2", features = ["chrono"]}
+serde = { version = "1.0.203", features = ["rc"] }
+serde_derive = "1.0.203"
+simplelog = "0.12.2"
+structopt = "0.3.26"
+strum = { version = "0.26.2", features = ["derive"]}
+strum_macros = "0.26.2"
