@@ -18,6 +18,8 @@ rm -rf $GITHUB/*/target
 
 echo "copying metadata..."
 cp $LOCAL/Cargo.toml $GITHUB
+cp $LOCAL/Cargo.lock $GITHUB
+cp $LOCAL/.gitignore$GITHUB
 cp $LOCAL/README.md $GITHUB
 echo "copying src..."
 cp -R $LOCAL/calendar $GITHUB
@@ -27,7 +29,7 @@ echo "copying edit_data..."
 cp -R $LOCAL/edit_data $GITHUB
 rm -rf $GITHUB/process_data
 echo "copying final data..."
-cp -R $LOCAL/data/spreads $GITHUB/data
+cp -R $LOCAL/data/spreads/* $GITHUB/data/spreads
 # echo "copying cals ..."
 # cp -R $LOCAL/data/cals $GITHUB/data
 

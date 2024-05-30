@@ -4,8 +4,9 @@ use ansi_term::Colour::*;
 use chrono::{Local, Weekday};
 use delegate::delegate;
 use itertools::Itertools;
+use log::debug;
 use ron::{de::from_reader, ser::to_string_pretty};
-use serde_derive::{Deserialize, Serialize}; use log::debug;
+use serde_derive::{Deserialize, Serialize};
 use std::{
     // borrow::{Borrow, BorrowMut},
     cell::RefCell,

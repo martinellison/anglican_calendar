@@ -102,8 +102,16 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                     .ok_or(CalendarError::new("need to specify title"))?
                     .trim()
                     .to_string();
-                let v1 = row[col + 1].as_string().unwrap_or_default().trim().to_string();
-                let v2 = row[col + 2].as_string().unwrap_or_default().trim().to_string();
+                let v1 = row[col + 1]
+                    .as_string()
+                    .unwrap_or_default()
+                    .trim()
+                    .to_string();
+                let v2 = row[col + 2]
+                    .as_string()
+                    .unwrap_or_default()
+                    .trim()
+                    .to_string();
                 holyday.date_cal = DateCal::new_from_strings(&kind, &v1, &v2)?;
             },
             "Month" | "Day" => {},

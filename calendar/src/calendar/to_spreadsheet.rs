@@ -14,6 +14,7 @@ impl super::Calendar {
             .set_bold()
             .set_text_wrap()
             .set_border(FormatBorder::Thin);
+        let int_format = Format::new().set_num_format("0");
         let worksheet = workbook.add_worksheet();
         let mut row = 0;
 
@@ -158,6 +159,7 @@ impl super::Calendar {
 
         let worksheet = workbook.add_worksheet();
         worksheet.set_name("Holydays")?;
+        worksheet.set_header("Holy days in the Calendar");
 
         let mut col = 0;
         worksheet.write_with_format(0, col, "Title", &bold_format)?;
@@ -199,7 +201,12 @@ impl super::Calendar {
                     // note: loss of information for some date classes
                     worksheet.write((index + 1) as u32, col, date.to_string())?;
                     col += 1;
-                    worksheet.write((index + 1) as u32, col, format!("{}", rel))?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        rel,
+                        &int_format,
+                    )?;
                     col += 1;
                 },
                 super::DateCal::Next {
@@ -207,22 +214,52 @@ impl super::Calendar {
                     day_of_week: _,
                 } => {
                     let (month, day) = date.try_month_and_day()?;
-                    worksheet.write((index + 1) as u32, col, month.to_string())?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        month,
+                        &int_format,
+                    )?;
                     col += 1;
-                    worksheet.write((index + 1) as u32, col, day.to_string())?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        day,
+                        &int_format,
+                    )?;
                     col += 1;
                 },
                 super::DateCal::NextSunday { date } => {
                     let (month, day) = date.try_month_and_day()?;
-                    worksheet.write((index + 1) as u32, col, month.to_string())?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        month,
+                        &int_format,
+                    )?;
                     col += 1;
-                    worksheet.write((index + 1) as u32, col, day.to_string())?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        day,
+                        &int_format,
+                    )?;
                     col += 1;
                 },
                 super::DateCal::Fixed { month, day } => {
-                    worksheet.write((index + 1) as u32, col, month.to_string())?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        month,
+                        &int_format,
+                    )?;
                     col += 1;
-                    worksheet.write((index + 1) as u32, col, day.to_string())?;
+                    worksheet.write_number_with_format(
+                        (index + 1) as u32,
+                        col,
+                        day,
+                        &int_format,
+                    )?;
                     col += 1;
                 },
             }
@@ -255,7 +292,7 @@ impl super::Calendar {
             worksheet.write((index + 1) as u32, col, &mains)?;
             col += 1;
 
-            /* TODO date_cal   other? description? */
+            /* TODO    other? description? */
         }
         worksheet.autofit();
         workbook
