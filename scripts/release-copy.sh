@@ -21,6 +21,7 @@ cp $LOCAL/Cargo.toml $GITHUB
 cp $LOCAL/Cargo.lock $GITHUB
 cp $LOCAL/.gitignore$GITHUB
 cp $LOCAL/README.md $GITHUB
+cp -R $LOCAL/docs $GITHUB
 echo "copying src..."
 cp -R $LOCAL/calendar $GITHUB
 echo "copying scripts..."

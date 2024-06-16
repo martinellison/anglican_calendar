@@ -1,29 +1,67 @@
 <html>
 
 <head>
-    <style> 
-  /*   https://paletton.com/#uid=7001O0kllllaFw0g0qFqFg0w0aF */
-        div.white {background-color: white; color: black;}
-        div.red {background-color: #ffaaaa; color: #550000}; 
-        div.purple {background-color: #9476ab; color: #220439}
-        div.green {background-color: g#88cc88; color: #004400}
+    <style>
+        /*   https://paletton.com/#uid=7001O0kllllaFw0g0qFqFg0w0aF */
+        div.holyday {padding: 0.5em;}
+
+        div.white {
+            background-color: white;
+            color: black;
+        }
+
+        div.red {
+            background-color: #ffaaaa;
+            color: #550000
+        }
+
+        div.purple {
+            /* background-color: #9476ab; */
+            background-color: #532b72;
+            /* color: #220439 */
+            color: white;
+        }
+
+        div.green {
+            background-color: #88cc88;
+            color: #004400
+        }
+
+        div.gray {
+            background-color: #bbb;
+            color: black
+        }
     </style>
 </head>
 
 <body>
     <h1>Calendar for {{ province }} for {{ year }} </h1>
     {% for date in dates %}
-    <div class={{date.colour_a}}>
+    <div>
         <h2>{{date.date_form}}</h2>
         {% for holyday in date.holydays %}
-            <p><b> {{ holyday.title }} </b> {{ holyday.class_format }} {{ holyday.death}}
-            {% for attr in holyday.attrs %} {{ attr -}} {% endfor %}
-            {% for o in holyday.other %} {{ o -}} {% endfor %}
-            {% for r in holyday.refs_format -%}
+        {% if holyday.drop_status == crate::year_calendar::DropStatus::Keep %} <div class="holyday {{holyday.colour}}">{% else %} <div class="holyday gray"> {% endif %}
+            <p><h3> {{ holyday.title }} ({{ holyday.class_format -}}) {{ holyday.death -}}
+                {% for attr in holyday.attrs %} {{ attr -}} {% endfor -%}
+                {% for o in holyday.other %} {{ o -}} {% endfor -%} </h3>
+                {% for r in holyday.refs_format -%}
                 <i>see</i> <a href="https://{{r.0}}"> {{r.1}} </a>
-            {% endfor %}
-        {% endfor %}
+                {% endfor %}
+                {% if !holyday.advice.is_empty() %}
+                    <div class="gray">
+                        <ul>
+                            {% for adv in holyday.advice %}
+                            <li>{{ adv }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+            {% endif %}
+            {% if holyday.drop_status != crate::year_calendar::DropStatus::Keep %}
+            <p><b>Dropped because: {{ holyday.drop_status }}</b></p>
+            {% endif %}
         </div>
+        {% endfor %}
+    </div>
     {% endfor %}
 </body>
 

@@ -1,7 +1,7 @@
 /*! Implements the year-independent data for a calendar. */
 
 use ansi_term::Colour::*;
-use chrono::{Local, Weekday};
+use chrono::{Local,  Utc, Weekday};
 use delegate::delegate;
 use itertools::Itertools;
 use log::debug;
@@ -19,26 +19,30 @@ use std::{
     rc::Rc,
     str::FromStr,
 };
-use strum::IntoEnumIterator;
+// use strum::IntoEnumIterator;
 // use strum::{ EnumMessage};
 use strum_macros::Display;
 pub mod from_spreadsheet;
 pub mod to_spreadsheet;
 use convert_case::{Case, Casing};
 use getset::{CopyGetters, Getters, MutGetters};
+/// a value or an error code
+type Result<T> = std::result::Result<T, CalendarError>;
+use databake::{Bake, CrateEnv};
 
 /** A [Calendar] contains the [Holyday]s for a 'province' e.g. the Anglican
 Church of Hong Kong. A Calendar is not specific to a specific year.*/
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Bake)]
+#[databake(path = calendar::calendar)]
 pub struct Calendar {
     #[serde(default)]
     /** info about the file */
     pub info: FileInfo,
     /** the province owning this calendar */
     pub province: Province,
-    holydays: Vec<HolydayRef>,
+    pub holydays: Vec<HolydayRef>,
     #[serde(skip)]
-    holydays_by_tag: HashMap<String, HolydayRef>,
+    pub holydays_by_tag: HashMap<String, HolydayRef>,
 }
 
 impl Default for Calendar {
@@ -63,7 +67,7 @@ impl Calendar {
     }
 
     /** read a calendar from a reader */
-    pub fn read<R>(reader: R) -> Result<Self, CalendarError>
+    pub fn read<R>(reader: R) -> Result<Self>
     where
         R: io::Read,
     {
@@ -80,7 +84,7 @@ impl Calendar {
 
     /** write a [Calendar] to a writer. Prettyprint as it will probably be
      * saved. */
-    pub fn write<W>(&mut self, writer: &mut W) -> Result<(), CalendarError>
+    pub fn write<W>(&mut self, writer: &mut W) -> Result<()>
     where
         W: io::Write,
     {
@@ -93,28 +97,28 @@ impl Calendar {
         writer.flush().map_err(CalendarError::from_error)
     }
 
-    /** apply [EdMods] to the calendar */
-    pub fn apply(&mut self, edits: &EdMods) -> Result<(), CalendarError> {
-        for em in &edits.holydays {
-            match self.get_by_tag(&em.tag) {
-                Ok(mut holyday) => {
-                    if em.delete {
-                        self.delete_by_tag(&em.tag);
-                    } else {
-                        holyday.modify(em);
-                    }
-                },
-                Err(_e) => {
-                    println!("tag {} not found, adding new holy day", &em.tag);
-                    self.add(&em.to_holyday()?);
-                },
-            }
-        }
-        Ok(())
-    }
+    // /** apply [EdMods] to the calendar */
+    // pub fn apply(&mut self, edits: &EdMods) -> Result<()> {
+    //     for em in &edits.holydays {
+    //         match self.get_by_tag(&em.tag) {
+    //             Ok(mut holyday) => {
+    //                 if em.delete {
+    //                     self.delete_by_tag(&em.tag);
+    //                 } else {
+    //                     holyday.modify(em);
+    //                 }
+    //             },
+    //             Err(_e) => {
+    //                 println!("tag {} not found, adding new holy day", &em.tag);
+    //                 self.add(&em.to_holyday()?);
+    //             },
+    //         }
+    //     }
+    //     Ok(())
+    // }
 
     /** find the [Holyday] with a specified tag, or `None` */
-    pub fn get_by_tag(&mut self, tag: &str) -> Result<HolydayRef, CalendarError> {
+    pub fn get_by_tag(&mut self, tag: &str) -> Result<HolydayRef> {
         let re = self.holydays_by_tag.get(tag);
         if let Some(r) = re {
             Ok(r.clone())
@@ -163,13 +167,41 @@ impl Calendar {
             holy_day.clean_up();
         }
     }
+
+    /** `dump_as_rust` dumps out the calendar as rust code */
+    pub fn dump_as_rust(&self) -> String { self.bake(&CrateEnv::default()).to_string() }
+}
+#[derive(Eq, PartialEq, Hash, Debug, Clone, Copy, Serialize, Deserialize, Ord, PartialOrd)]
+pub struct CalDateTime(chrono::DateTime<Local>);
+impl Bake for CalDateTime {
+    fn bake(&self, _ctx: &CrateEnv) -> databake::TokenStream {
+        format!(
+            "chrono::DateTime::from_timestamp({},0).expect(\"bad date\").into()",
+            self.0.timestamp()
+        )
+        .parse()
+        .unwrap()
+    }
+}
+impl From<chrono::DateTime<Local>> for CalDateTime {
+    fn from(date_time: chrono::DateTime<Local>) -> Self { Self(date_time) }
+}
+impl From<CalDateTime> for chrono::DateTime<Local> {
+    fn from(cal_date_time: CalDateTime) -> Self { cal_date_time.0 }
+}
+impl From<chrono::DateTime<Utc>> for CalDateTime {
+    fn from(date_time: chrono::DateTime<Utc>) -> Self { Self(date_time.with_timezone(&Local)) }
+}
+impl fmt::Display for CalDateTime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", self.0) }
 }
 /** Information about a file that can be used e.g. for tracking its origin. */
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Bake)]
+#[databake(path = calendar::calendar)]
 pub struct FileInfo {
-    description: String,
-    created: chrono::DateTime<Local>,
-    creation: String,
+    pub description: String,
+    pub created: CalDateTime,
+    pub creation: String,
 }
 //const VERBOSE: bool = true;
 /// whatever has a calendar
@@ -186,7 +218,9 @@ pub struct FileInfo {
     PartialOrd,
     strum::EnumString,
     strum::VariantNames,
+    Bake,
 )]
+#[databake(path = calendar::calendar)]
 pub enum Province {
     ChurchOfEngland,
     HongKong,
@@ -198,21 +232,21 @@ pub enum Province {
     Unknown,
     All,
 }
-impl Province {
-    fn from_short_str(s: &str) -> Result<Self, CalendarError> {
-        match s {
-            "cofe" | "en" => Ok(Province::ChurchOfEngland),
-            "hkskh" | "hk" => Ok(Province::HongKong),
-            "ecusa" | "tec" | "usa" | "us" => Ok(Province::ECUSA),
-            "aca" | "au" => Ok(Province::Australia),
-            "acsa" | "sa" => Ok(Province::SouthAfrica),
-            "acc" | "ca" => Ok(Province::Canada),
-            "bcp" => Ok(Province::BCP),
-            "all" => Ok(Province::All),
-            _ => Err(CalendarError::new(&format!("unknown province {}", &s))),
-        }
-    }
-}
+// impl Province {
+//     fn from_short_str(s: &str) -> Result<Self, CalendarError> {
+//         match s {
+//             "cofe" | "en" => Ok(Province::ChurchOfEngland),
+//             "hkskh" | "hk" => Ok(Province::HongKong),
+//             "ecusa" | "tec" | "usa" | "us" => Ok(Province::ECUSA),
+//             "aca" | "au" => Ok(Province::Australia),
+//             "acsa" | "sa" => Ok(Province::SouthAfrica),
+//             "acc" | "ca" => Ok(Province::Canada),
+//             "bcp" => Ok(Province::BCP),
+//             "all" => Ok(Province::All),
+//             _ => Err(CalendarError::new(&format!("unknown province {}",
+// &s))),         }
+//     }
+// }
 impl fmt::Display for Province {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -289,8 +323,10 @@ impl ProvinceList {
     }
 
     /** gets the data for one [Province] */
-    pub fn get(&self, province: Province) -> &ProvinceData {
-        self.provinces.get(&province).unwrap()
+    pub fn get(&self, province: Province) -> Result<&ProvinceData> {
+        self.provinces.get(&province).ok_or(CalendarError {
+            msg: "unknown province".to_string(),
+        })
     }
 
     /** all the provinces */
@@ -301,28 +337,31 @@ impl FileInfo {
     pub fn new(description: &str, creation: &str) -> Self {
         Self {
             description: description.to_string(),
-            created: chrono::Local::now(),
+            created: chrono::Local::now().into(),
             creation: creation.to_string(),
         }
     }
 
-    // /** set the creation string */
-    // pub fn set_creation(&mut self, creation: &str) {
-    //     self.creation = creation.to_string()
-    // }
+    /** set the creation string */
+    pub fn set_creation(&mut self, creation: &str) {
+        self.creation = creation.to_string()
+    }
 }
 impl Default for FileInfo {
     fn default() -> Self {
         Self {
             description: "".to_string(),
-            created: chrono::Local::now(),
+            created: chrono::Local::now().into(),
             creation: "".to_string(),
         }
     }
 }
 /** An Holy Day is an holy day in a [Calendar] e.g. the holy days of the Anglican
 Church of Hong Kong include Easter Sunday and Matteo Ricci.*/
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Getters, MutGetters, CopyGetters)]
+#[derive(
+    Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Getters, MutGetters, CopyGetters, Bake,
+)]
+#[databake(path = calendar::calendar)]
 #[serde(default)]
 pub struct Holyday {
     /** the name of the holy day */
@@ -352,6 +391,7 @@ pub struct Holyday {
     pub date_cal: DateCal,
     /** whether and how the holy day must be transferred to another
     date or dropped */
+    #[getset(get_copy)]
     pub transfer: TransferType,
 }
 impl Hash for Holyday {
@@ -362,36 +402,36 @@ impl Hash for Holyday {
     }
 }
 impl Holyday {
-    /** modify an Holy Day according to an HolydayMod */
-    pub fn modify(&mut self, m: &HolydayMod) {
-        if let Some(t) = &m.title {
-            self.title = t.to_string();
-        }
-        if let Some(mn) = &m.main {
-            self.main = mn.clone();
-        }
-        if let Some(o) = &m.other {
-            self.other = o.clone();
-        }
-        if let Some(d) = &m.death {
-            self.death = d.to_string();
-        }
-        if let Some(rr) = &m.refs {
-            self.refs = rr.clone();
-        }
-        if let Some(c) = &m.class {
-            self.class = *c;
-        }
-        if let Some(e) = &m.has_eve {
-            self.has_eve = *e;
-        }
-        if let Some(c) = &m.date_cal {
-            self.date_cal = c.clone();
-        }
-        if let Some(t) = &m.transfer {
-            self.transfer = t.clone();
-        }
-    }
+    // /** modify an Holy Day according to an HolydayMod */
+    // pub fn modify(&mut self, m: &HolydayMod) {
+    //     if let Some(t) = &m.title {
+    //         self.title = t.to_string();
+    //     }
+    //     if let Some(mn) = &m.main {
+    //         self.main.clone_from(mn);
+    //     }
+    //     if let Some(o) = &m.other {
+    //         self.other.clone_from(o);
+    //     }
+    //     if let Some(d) = &m.death {
+    //         self.death = d.to_string();
+    //     }
+    //     if let Some(rr) = &m.refs {
+    //         self.refs.clone_from(rr);
+    //     }
+    //     if let Some(c) = &m.class {
+    //         self.class = *c;
+    //     }
+    //     if let Some(e) = &m.has_eve {
+    //         self.has_eve = *e;
+    //     }
+    //     if let Some(c) = &m.date_cal {
+    //         self.date_cal = c.clone();
+    //     }
+    //     if let Some(t) = &m.transfer {
+    //         self.transfer = *t;
+    //     }
+    // }
 
     fn cmp_by_date_cal(&self, other: &Self) -> Ordering { self.date_cal.cmp(&other.date_cal) }
 
@@ -445,6 +485,13 @@ An `HolydayRef` reference to a Holyday */
 pub struct HolydayRef {
     r: Rc<RefCell<Holyday>>,
 }
+impl Bake for HolydayRef {
+    fn bake(&self, ctx: &CrateEnv) -> databake::TokenStream {
+        format!("HolydayRef::new({})", self.r.borrow().bake(ctx))
+            .parse()
+            .unwrap()
+    }
+}
 impl HolydayRef {
     // /** modify an Holy Day according to an HolydayMod */
     // pub fn modify(&mut self, m: &HolydayMod) {
@@ -452,8 +499,8 @@ impl HolydayRef {
     // }
     delegate! {
         to self.r.as_ref().borrow_mut() {
-            /** modify an Holy Day according to an HolydayMod */
-            pub fn modify(&mut self, m: &HolydayMod);
+            // /** modify an Holy Day according to an HolydayMod */
+            // pub fn modify(&mut self, m: &HolydayMod);
             /** `clean_up` tidies up a [Holyday] */
             pub fn clean_up(&mut self);
         }
@@ -461,13 +508,16 @@ impl HolydayRef {
 
     delegate! {
         to self.r.as_ref().borrow() {
-            /** `class` returns the class of the holyday */
-            pub fn class(&self) -> HolydayClass ;
             /* holy day has eve (and eve is not an specified holy day in its own right)  */
             pub fn has_eve(&self) -> bool;
+            /** `class` returns the class of the holyday */
+            pub fn class(&self) -> HolydayClass ;  /** `transfer` returns the transfer type of the holyday */
+            pub fn transfer(&self) -> TransferType ;
         }
     }
+}
 
+impl HolydayRef {
     /** Create a new HolydayRef */
     pub fn new(hd: Holyday) -> Self {
         Self {
@@ -509,11 +559,11 @@ impl HolydayRef {
         hr.title.clone()
     }
 
-    /** `transfer` returns the transfer type of the holyday */
-    pub fn transfer(&self) -> TransferType {
-        let hr: &Holyday = &self.r.as_ref().borrow();
-        hr.transfer.clone()
-    }
+    // /** `transfer` returns the transfer type of the holyday */
+    // pub fn transfer(&self) -> TransferType {
+    //     let hr: &Holyday = &self.r.as_ref().borrow();
+    //     hr.transfer.clone()
+    // }
 
     /** `main` returns the main of the holyday */
     pub fn main(&self) -> HashSet<MainAttribute> {
@@ -581,7 +631,7 @@ impl Default for HolydaySort {
 impl FromStr for HolydaySort {
     type Err = CalendarError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "nosort" => Ok(HolydaySort::NoSort),
             "normal" => Ok(HolydaySort::Normal),
@@ -592,168 +642,169 @@ impl FromStr for HolydaySort {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
-/** EdMods is a set of edit changes to an [Calendar]. */
-pub struct EdMods {
-    #[serde(default)]
-    info: FileInfo,
-    /** the [HolydayMod]s in this EdMods */
-    pub holydays: Vec<HolydayMod>,
-}
-impl EdMods {
-    /** read edit mods from a reader */
-    pub fn read<R>(reader: R) -> Result<Self, CalendarError>
-    where
-        R: io::Read,
-    {
-        println!("{}", Green.paint("reading edits"));
-        let u: Self = from_reader(reader).map_err(CalendarError::from_error)?;
-        println!(
-            "{}",
-            Green.paint(format!("modifications read from reader with {:?}", u.info))
-        );
-        Ok(u)
-    }
-}
-impl From<&mut Calendar> for EdMods {
-    fn from(c: &mut Calendar) -> Self {
-        Self {
-            info: c.info.clone(),
-            holydays: c
-                .holydays
-                .iter_mut()
-                .map(|e| {
-                    let e: Holyday = e.clone().into();
-                    HolydayMod::from(e)
-                })
-                .collect(),
-        }
-    }
-}
+// #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+// /** EdMods is a set of edit changes to an [Calendar]. */
+// pub struct EdMods {
+//     #[serde(default)]
+//     info: FileInfo,
+//     /** the [HolydayMod]s in this EdMods */
+//     pub holydays: Vec<HolydayMod>,
+// }
+// impl EdMods {
+//     /** read edit mods from a reader */
+//     pub fn read<R>(reader: R) -> Result<Self>
+//     where
+//         R: io::Read,
+//     {
+//         println!("{}", Green.paint("reading edits"));
+//         let u: Self = from_reader(reader).map_err(CalendarError::from_error)?;
+//         println!(
+//             "{}",
+//             Green.paint(format!("modifications read from reader with {:?}", u.info))
+//         );
+//         Ok(u)
+//     }
+// }
+// impl From<&mut Calendar> for EdMods {
+//     fn from(c: &mut Calendar) -> Self {
+//         Self {
+//             info: c.info.clone(),
+//             holydays: c
+//                 .holydays
+//                 .iter_mut()
+//                 .map(|e| {
+//                     let e: Holyday = e.clone().into();
+//                     HolydayMod::from(e)
+//                 })
+//                 .collect(),
+//         }
+//     }
+// }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
-/** A change to an [Holyday] or a new Holy Day. */
-#[serde(default)]
-pub struct HolydayMod {
-    /** the name of the holyday */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-    /** a description of an [Holyday] */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    /** main attributes of commemorated e.g. martyr, bishop */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub main: Option<HashSet<MainAttribute>>,
-    /** other attributes of commemorated e.g. spiritual guide */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub other: Option<Vec<String>>,
-    /** death date of commemorated e.g. 379, 1833, c.269 */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub death: Option<String>,
-    /** references on the internet to the holy day */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub refs: Option<Vec<Reference>>,
-    /** the level of the holy day (commemoration, lesser festival,
-    festival, principal feast, also unclassified) */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub class: Option<HolydayClass>,
-    /** a short tag for identifying the holy day so that it can be
-    overridden */
-    pub tag: String,
-    /** holy day has eve (and eve is not an specified holy day in its
-    own right) */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub has_eve: Option<bool>,
-    /** date calculation */
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_cal: Option<DateCal>,
-    /** whether and how the holy day can be transferred to another date */
-    pub transfer: Option<TransferType>,
-    /** whether to delete the [Holyday] */
-    pub delete: bool,
-}
-impl HolydayMod {
-    /** convert an EdMod to an [Holyday]. All fields must be specified. */
-    pub fn to_holyday(&self) -> Result<Holyday, CalendarError> {
-        let title = self.clone().title.ok_or_else(|| {
-            CalendarError::new(&format!(
-                "adding holy day and field not specified - title, check that the edit tag ({:?}) \
-                 is found in a calendar",
-                self.tag
-            ))
-        })?;
-        let e = Holyday {
-            title: title.clone(),
-            description: self.clone().description.unwrap_or(title.clone()),
-            main: self.main.clone().ok_or_else(|| {
-                CalendarError::new("adding holy day and field not specified -  main")
-            })?,
-            other: self.other.clone().ok_or_else(|| {
-                CalendarError::new("adding holy day and field not specified -  other ")
-            })?,
-            death: self.death.clone().unwrap_or("".to_string()),
-            refs: self.refs.clone().ok_or_else(|| {
-                CalendarError::new("adding holy day and field not specified -  refs")
-            })?,
-            class: self
-                .class
-                //    .clone()
-                .ok_or_else(|| {
-                    CalendarError::new("adding holy day and field not specified -  class ")
-                })?,
-            tag: self.tag.clone(),
-            has_eve: self.has_eve.ok_or_else(|| {
-                CalendarError::new("adding holy day and field not specified -  has_eve")
-            })?,
-            date_cal: self
-                .date_cal
-                .clone() // igadding holy day and field not specified - re clippy
-                .ok_or_else(|| {
-                    CalendarError::new("adding holy day and field not specified -  date_cal ")
-                })?,
-            transfer: self.transfer.clone().ok_or_else(|| {
-                CalendarError::new("adding holy day and field not specified -  transfer ")
-            })?,
-        };
-        Ok(e)
-    }
-}
-impl Default for HolydayMod {
-    fn default() -> Self {
-        Self {
-            title: None,
-            description: None,
-            main: None,
-            other: None,
-            death: None,
-            refs: None,
-            class: None,
-            tag: "".to_string(),
-            has_eve: None,
-            date_cal: None,
-            transfer: None,
-            delete: false,
-        }
-    }
-}
-impl From<Holyday> for HolydayMod {
-    fn from(e: Holyday) -> Self {
-        Self {
-            title: some_unless_blank(&e.title),
-            description: some_unless_blank(&e.description),
-            main: Some(e.main),
-            other: Some(e.other),
-            death: some_unless_blank(&e.death),
-            refs: Some(e.refs),
-            class: Some(e.class),
-            tag: e.tag,
-            has_eve: Some(e.has_eve),
-            date_cal: Some(e.date_cal),
-            transfer: Some(e.transfer),
-            delete: false,
-        }
-    }
-}
+// #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
+// /** A change to an [Holyday] or a new Holy Day. */
+// #[serde(default)]
+// pub struct HolydayMod {
+//     /** the name of the holyday */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub title: Option<String>,
+//     /** a description of an [Holyday] */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub description: Option<String>,
+//     /** main attributes of commemorated e.g. martyr, bishop */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub main: Option<HashSet<MainAttribute>>,
+//     /** other attributes of commemorated e.g. spiritual guide */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub other: Option<Vec<String>>,
+//     /** death date of commemorated e.g. 379, 1833, c.269 */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub death: Option<String>,
+//     /** references on the internet to the holy day */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub refs: Option<Vec<Reference>>,
+//     /** the level of the holy day (commemoration, lesser festival,
+//     festival, principal feast, also unclassified) */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub class: Option<HolydayClass>,
+//     /** a short tag for identifying the holy day so that it can be
+//     overridden */
+//     pub tag: String,
+//     /** holy day has eve (and eve is not an specified holy day in its
+//     own right) */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub has_eve: Option<bool>,
+//     /** date calculation */
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     pub date_cal: Option<DateCal>,
+//     /** whether and how the holy day can be transferred to another date */
+//     pub transfer: Option<TransferType>,
+//     /** whether to delete the [Holyday] */
+//     pub delete: bool,
+// }
+// impl HolydayMod {
+//     /** convert an EdMod to an [Holyday]. All fields must be specified. */
+//     pub fn to_holyday(&self) -> Result<Holyday> {
+//         let title = self.clone().title.ok_or_else(|| {
+//             CalendarError::new(&format!(
+//                 "adding holy day and field not specified - title, check that the edit tag ({:?}) \
+//                  is found in a calendar",
+//                 self.tag
+//             ))
+//         })?;
+//         let e = Holyday {
+//             title: title.clone(),
+//             description: self.clone().description.unwrap_or(title.clone()),
+//             main: self.main.clone().ok_or_else(|| {
+//                 CalendarError::new("adding holy day and field not specified -  main")
+//             })?,
+//             other: self.other.clone().ok_or_else(|| {
+//                 CalendarError::new("adding holy day and field not specified -  other ")
+//             })?,
+//             death: self.death.clone().unwrap_or("".to_string()),
+//             refs: self.refs.clone().ok_or_else(|| {
+//                 CalendarError::new("adding holy day and field not specified -  refs")
+//             })?,
+//             class: self
+//                 .class
+//                 //    .clone()
+//                 .ok_or_else(|| {
+//                     CalendarError::new("adding holy day and field not specified -  class ")
+//                 })?,
+//             tag: self.tag.clone(),
+//             has_eve: self.has_eve.ok_or_else(|| {
+//                 CalendarError::new("adding holy day and field not specified -  has_eve")
+//             })?,
+//             date_cal: self
+//                 .date_cal
+//                 .clone() // igadding holy day and field not specified - re clippy
+//                 .ok_or_else(|| {
+//                     CalendarError::new("adding holy day and field not specified -  date_cal ")
+//                 })?,
+//             transfer: self.transfer.ok_or_else(|| {
+//                 CalendarError::new("adding holy day and field not specified -  transfer ")
+//             })?,
+//         };
+//         Ok(e)
+//     }
+// }
+// impl Default for HolydayMod {
+//     fn default() -> Self {
+//         Self {
+//             title: None,
+//             description: None,
+//             main: None,
+//             other: None,
+//             death: None,
+//             refs: None,
+//             class: None,
+//             tag: "".to_string(),
+//             has_eve: None,
+//             date_cal: None,
+//             transfer: None,
+//             delete: false,
+//         }
+//     }
+// }
+// impl From<Holyday> for HolydayMod {
+//     fn from(e: Holyday) -> Self {
+//         Self {
+//             title: some_unless_blank(&e.title),
+//             description: some_unless_blank(&e.description),
+//             main: Some(e.main),
+//             other: Some(e.other),
+//             death: some_unless_blank(&e.death),
+//             refs: Some(e.refs),
+//             class: Some(e.class),
+//             tag: e.tag,
+//             has_eve: Some(e.has_eve),
+//             date_cal: Some(e.date_cal),
+//             transfer: Some(e.transfer),
+//             delete: false,
+//         }
+//     }
+// }
+/// returns None for an empty string, otherwise Some
 fn some_unless_blank(s: &str) -> Option<String> {
     if s.is_empty() {
         None
@@ -776,7 +827,9 @@ festival, festival, principal feast, also unclassified and (ordinary) Sunday*/
     Clone,
     strum::EnumString,
     strum::VariantNames,
+    Bake,
 )]
+#[databake(path = calendar::calendar)]
 #[strum(ascii_case_insensitive)]
 pub enum HolydayClass {
     NotAFestival,
@@ -807,7 +860,9 @@ Easter Sunday. */
     strum::VariantNames,
     strum::EnumDiscriminants,
     strum::EnumCount,
+    Bake,
 )]
+#[databake(path = calendar::calendar)]
 #[strum_discriminants(derive(strum::VariantArray))]
 pub enum DateCal {
     /** Easter Sunday */
@@ -836,7 +891,7 @@ pub enum DateCal {
 impl DateCal {
     /** `new_from_strings` creates a [DateCal from 3 strings] TODO better
      * error handling */
-    pub fn new_from_strings(kind: &str, v1: &str, v2: &str) -> Result<Self, CalendarError> {
+    pub fn new_from_strings(kind: &str, v1: &str, v2: &str) -> Result<Self> {
         debug!("date cal from ({kind}/{v1}/{v2})");
         Ok(match kind {
             "Easter" => DateCal::Easter,
@@ -866,7 +921,7 @@ impl DateCal {
     }
 
     /** `try_month` gets the month of the date if that makes sense */
-    pub fn try_month_and_day(&self) -> Result<(u8, u8), CalendarError> {
+    pub fn try_month_and_day(&self) -> Result<(u8, u8)> {
         match self {
             DateCal::Next {
                 date,
@@ -912,20 +967,26 @@ impl DateCalDiscriminants {
         .to_string()
     }
 }
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash)]
+// #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash)]
+// #[derive(Bake)]
+// #[databake(path = calendar::calendar)]
 /** a [chrono::Weekday] with an ordering, so it can be part of a
 sortable object. The actual order does not matter. */
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash)]
 pub struct OrderableDayOfWeek {
     /** the underlying day of the week */
     pub wd: chrono::Weekday,
 }
 impl OrderableDayOfWeek {
     /** `new_from_string` creates a a[OrderableDayOfWeek] from a string */
-    pub fn from_str(s: &str) -> Result<Self, CalendarError> {
+    pub fn new_from_str(s: &str) -> Result<Self> {
         Ok(Self {
             wd: Weekday::from_str(s).map_err(CalendarError::from_error)?,
         })
     }
+}
+impl Bake for OrderableDayOfWeek {
+    fn bake(&self, _ctx: &CrateEnv) -> databake::TokenStream { self.to_string().parse().unwrap() }
 }
 impl Ord for OrderableDayOfWeek {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -957,10 +1018,13 @@ to another date or dropped */
     Eq,
     PartialEq,
     Clone,
+    Copy,
     strum::Display,
     strum::EnumString,
     strum::VariantNames,
+    Bake,
 )]
+#[databake(path = calendar::calendar)]
 #[strum(ascii_case_insensitive)]
 pub enum TransferType {
     /** follow the usual rules using the holy day's [HolydayClass] */
@@ -999,12 +1063,15 @@ impl TransferType {
     strum::Display,
     strum::EnumString,
     strum::VariantNames,
+    Bake,
 )]
+#[databake(path = calendar::calendar)]
 #[strum(ascii_case_insensitive)]
 pub enum MainAttribute {
     Martyr,
 }
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash, Bake)]
+#[databake(path = calendar::calendar)]
 /** A Reference is a web page that is relevant to an [Holyday].
 ```
         use calendar::calendar::{Reference, WebSite};
@@ -1040,7 +1107,8 @@ impl Reference {
     pub fn url(&self) -> String { (self.website.prefix() + &self.article).clone() }
 }
 /** WebSite is a web site that contains relevant information. */
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, Hash, Bake)]
+#[databake(path = calendar::calendar)]
 pub enum WebSite {
     Wikipedia,
 }
@@ -1063,7 +1131,7 @@ pub enum Season {
     Ordinary,
 }
 /** the colour for a [Holyday] */
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum SeasonColour {
     White,
     Red,

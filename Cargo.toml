@@ -1,8 +1,22 @@
 [workspace]
-name = "anglican_calendar"
-members = ["calendar", "edit_data", "reports"]
+members = ["calendar", "edit_data", "reports", "test-rust"]
 resolver = "2"
 
 [workspace.package]
-version = "0.2.1"
-keywords=["religious", "anglican", "calendar"]
+# name = "anglican_calendar"
+readme="README.md"
+version = "0.2.2"
+edition = "2021"
+keywords=["religious", "Christian", "Anglican", "calendar", "festival"]
+authors = ["Martin <m.e@acm.org>]"]
+description = "Calculates the holy days of a calendar of an Anglican church for a given year"
+repository = "github.com/martinellison/anglican_calendar"
+license="GPL3"
+
+# [workspace.dependencies]
+# ansi_term = "0.12.1"
+# chrono = { version = "0.4.38", features = ["serde"] }
+# delegate = "0.12.0"
+# itertools = "0.13.0"
+# ron = "0.8.1"
+# log = "0.4.21"

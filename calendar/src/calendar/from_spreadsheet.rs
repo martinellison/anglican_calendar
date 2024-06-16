@@ -8,8 +8,10 @@ use std::{path::Path, str::FromStr};
 
 /** `read_from_spreadsheet` reads a [Calendar] from a spreadsheet */
 pub fn read_from_spreadsheet(file: &Path) -> Result<Calendar, CalendarError> {
+    debug!("reading spreadsheet");
     let mut ss_err = None;
     let mut calendar = Calendar::new();
+    debug!("reading calendar sheet");
     let mut workbook: Xlsx<_> = open_workbook(file)?;
     let range = workbook.worksheet_range("Calendar")?;
     // note: values must be in the correct cell or they will fail
@@ -35,11 +37,13 @@ pub fn read_from_spreadsheet(file: &Path) -> Result<Calendar, CalendarError> {
     row += 1;
     calendar.info.created = get_meta("Created", row)?
         .parse()
-        .unwrap_or_else(|_| chrono::Local::now());
+        .unwrap_or_else(|_| chrono::Local::now())
+        .into();
     row += 1;
     calendar.info.creation = get_meta("Creation", row)?.to_string();
-    row += 1;
+    // row += 1;
 
+    debug!("readinf Holydays sheet");
     let range = workbook.worksheet_range("Holydays")?;
     let headers = range
         .headers()
@@ -146,7 +150,7 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                     .as_string()
                     .unwrap_or_default()
                     .trim()
-                    .to_string()
+                    // .to_string()
                     .split('|')
                     .map(|r| Reference::new(Wikipedia, r.trim().to_string()))
                     .collect();
@@ -180,3 +184,20 @@ impl From<strum::ParseError> for super::CalendarError {
         Self::new(&format!("spreadsheet parse error: {err}"))
     }
 }
+
+/*
+
+Copyright ©2019-2024 Martin Ellison.  This program is free software: you
+can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see
+[licenses](https://www.gnu.org/licenses/). */

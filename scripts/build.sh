@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# reset
-
 TARG=$1
 export BASE=$(git rev-parse --show-toplevel)
 if [[ "$BASE" == "" ]]; then
@@ -21,11 +19,6 @@ case "$TARG" in
         echo "unknown target" $TARG
         exit 1
 esac
-export BASE=$(git rev-parse --show-toplevel)
-if [[ "$BASE" == "" ]]; then
-    echo "need to be in the git repository"
-    exit 1
-fi
 echo 'building...'
 cargo build $TARGOPT
 if [[ "$TARG" == "release" ]]; then

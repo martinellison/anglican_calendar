@@ -17,13 +17,15 @@ else
     cd $BASE
     rustup default stable
     codium anglican_calendar.code-workspace
-    case $MACHINE in
-        xiaosan) $BASE/scripts/update.sh ;;
-    esac
-    echo "pulling from git..."
-    git pull
+    # case $MACHINE in
+    #     xiaosan) $BASE/scripts/update.sh ;;
+    # esac
+    # echo "pulling from git..."
+    # git pull
+    echo "upgrading crates..."
+    cargo upgrade --incompatible
     echo "updating crates..."
-       cargo upgrade --incompatible
+    cargo update 
     echo "fixing..."
     cargo +nightly fix --allow-dirty --allow-staged
     echo "clipping..."

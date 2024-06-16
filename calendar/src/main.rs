@@ -28,6 +28,8 @@ use std::{
     path::Path,
 };
 use structopt::StructOpt;
+/// a value or an error code
+type Result<T> = std::result::Result<T, CalendarError>;
 
 fn main() {
     println!(
@@ -42,13 +44,19 @@ fn main() {
     }
     println!("{}", Green.paint("done"));
 }
-fn run() -> Result<(), CalendarError> {
+fn run() -> Result<()> {
     let opt = Opt::from_args();
     if opt.verbose {
-        SimpleLogger::init(LevelFilter::Trace, simplelog::Config::default())
-            .map_err(|err| CalendarError::new(&format!("error when starting logger: {err}")))?;
+        SimpleLogger::init(
+            LevelFilter::Debug,
+            simplelog::ConfigBuilder::default()
+                .set_time_level(LevelFilter::Trace)
+                .set_thread_level(LevelFilter::Trace)
+                .set_location_level(LevelFilter::Error)
+                .build(),
+        )
+        .map_err(|err| CalendarError::new(&format!("error when starting logger: {err}")))?;
         debug!("options: {:?}", opt);
-        debug!("running engine with webview...");
     }
     println!(
         "{}",
@@ -56,6 +64,7 @@ fn run() -> Result<(), CalendarError> {
     );
 
     let cal = if opt.from_old_format {
+        debug!("reading from old format file");
         let inf = File::open(opt.calendar_filename).map_err(CalendarError::from_error)?;
         let mut br = BufReader::new(inf);
         calendar::Calendar::read(&mut br)?
@@ -63,10 +72,10 @@ fn run() -> Result<(), CalendarError> {
         calendar::from_spreadsheet::read_from_spreadsheet(Path::new(&opt.calendar_filename))?
     };
     let year_cal = year_calendar::YearCalendar::from_calendar(&cal, opt.year, opt.verbose)?;
-    if opt.verbose {
-        println!("{}", Green.paint("year calendar"));
-        // println!("{:#?}", year_cal);
-    }
+    // if opt.verbose {
+    debug!("{}", Green.paint("year calendar"));
+    // println!("{:#?}", year_cal);
+    // }
     println!("{}", Green.paint("generating year calendar"));
     let ident = format!("{}-{}", opt.unique, opt.year);
     let (ical, ical_del) = year_cal.to_ical(ident.as_str());
@@ -130,7 +139,7 @@ pub struct Opt {
     /// address**
     #[structopt(short = "u", long = "unique")]
     unique: String,
-    /// read from old format filea spreadsheet
-    #[structopt(short = "f", long = "from_spread")]
+    /// read from old format filea
+    #[structopt(short = "f", long = "from_old_format")]
     from_old_format: bool,
 }

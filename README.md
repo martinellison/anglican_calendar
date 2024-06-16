@@ -7,6 +7,17 @@ It can be used to:
 * create a report of a calendar for a year.
 * generate a calendar that can be loaded into calendar programs such as Google Calendar.
 
+## Please send feedback
+
+Please send feedback using the GitHub web page. It might not be looked at straight away.
+
+In particular, please raise:
+
+* anything that causes the program to crash.
+* any incorrect input data.
+* any incorrect output.
+* any new or modified calendars, including data for other Provinces that are not currently recorded.
+
 ## Version 0.2
 
 This project has been revised to change the main input format to spreadsheets as this is easier to edit.
@@ -14,16 +25,14 @@ This project has been revised to change the main input format to spreadsheets as
 Old format input files can be converted; see `scripts/make-spreadsheets.sh` for an example script.
 
 
-## How to do (applies to version 0.1)
-
-*This is a bit out of date.*
+## How to do
 
 This section describes some of the most common things to do and some
 guidelines on how to do them.
 
 * How to load the holy days of a Church calendar into your calendar
   program (e.g. Google Calendar) and how to cancel these holy days.
-* How to generate the holy days for a new year.
+* How to generate the holy days for a new year, and print a report.
 * How to build the code.
 * How to modify a calendar or create a new calendar.
 * How to modify the code.
@@ -33,7 +42,7 @@ guidelines on how to do them.
 *Create a new test calendar in your calendar system for just your
 Church calendar, and import the holy days into this new
 calendar. Then, if you want to undo the load and remove all the holy
-days, you can just delete the test calendar. This is just an alpha
+days, you can just delete the test calendar. This program is just an alpha
 version after all.*
 
 There are generated calendars in the `data/cals` directory. Most
@@ -43,6 +52,8 @@ calendar. You want to load a file with a name like `cofe-2019.ical`.
 Note: aca = Anglican Church of Australia, cofe = Church of England,
 ecusa = Episcopal Church of the United States of America, hkskh =
 Anglican Church of Hong Kong.
+
+The `calendar` program also can generate a report of the calendar for a given province and year.
 
 ### How to add a new calendar to Google Calendar from URL
 
@@ -80,11 +91,11 @@ Some technical knowledge required.
    required by this program. These can be found in the `data/final`
    directory. If you need a different calendar, see the information
    below to create your own.
-3. Use the `anglican_calendar` executable to create a calendar and the
+3. Use the `calendar` executable to create a calendar and the
    associated deletion file. Running this executable with `--help`
    will describe the options.
 
-   The execution line will be something like `./anglican_calendar -c
+   The execution line will be something like `./calendar -c
 data/final/cofe.data -i data/cals/cofe-2019.ical -d
 data/cals/cofe-del-2019.ical -y 2019 -u ang-alpha`
 
@@ -95,71 +106,68 @@ the calendar system (e.g. Google Calendar) so that your calendar app
 can delete the correct entries using the deletion file (see "How to
 cancel..." above).
 
+The `calendar` program also can generate a report of the calendar for a given province and year, so you can check the spreadsheet. The report is in HTML format, so load it as a file into your favourite web browser to read it. Use the `calendar` program with the `--report my_report.html` option.
+
 ### How to build the code
 
 Systems administration  knowledge required.
 
-1. The code is written in the rust programming language, so you will
-   need to install the rust tool chain.
+1. The code is written in the Rust programming language, so you will
+   need to install the Rust tool chain.
 2. Clone this repository from GitHub.
 3. Build the executables. See the `scripts/build.sh` script for an
    idea of how to do this.
 
 ### How to modify a calendar or create a new calendar
 
-Systems administration knowledge required. Also, this is a mess and
-unnecessarily difficult to understand.
+Systems administration knowledge required. *Rewritten for version 0.2.*
 
-Your options are:
+Calendar data is contained in spreadsheets (with a defined format).
 
-* modify the file in the `data/final` directory. At the moment, the
-   only documentation for this format is in the source code for the
-   programs. **or**
-* use code such as in `scripts/make-data.sh` to derive a calendar data
-  file from Wikipedia data. Good luck with this; you will need it.
-  * first replace commas with `@` signs where they separate fields in
-  the input data. See files such as `data/original/cofe.txt` for an
-  example.
-  * you can use the `edit-data` executable to modify a calendar data
-  file. This applies some edits (in their own format). It matches
-  edits to holy days using the `tag` field i.e. the tag nmust be the
-  same on the old holy day entry and the edit modification for the
-  edit to work.
+To create a new calendar, take a copy of one of the existing spreadsheets and modify it as required.
+
+The spreadsheet has three worksheets:
+
+Worksheet | Purpose
+--- | ---
+Province | overall data for the calendar
+Advice | description of the 'Holydays' worksheet, not read by the program
+Holydays | list of holy days
 
 ### How to modify the code
 
-Application development knowledge required, including the rust
+Application development knowledge required, including the Rust
 programming language.
 
-The code includes documentation which can be displayed using rust
+The code includes documentation which can be displayed using Rust
 tools such as `rustdoc`. Please see this documentation for additional
 information about the code internals. Please raise issues and pull
-requests if you can.
+requests on GitHub if you can.
 
 ## The functionality of the executable
 
-The main executable generates the iCal files.
+The main executable (`calendar`) generates the iCal files.
 
 The functionality of the executable is performed by library
 crates called from the main program, so that other programs can access
 the same functions.
 
+## Other executables
+
+The other executables are less important.
+
+### Edit data
+
+`edit_data` is only used for tidying a spreadsheet. You probably will not use this.
+
+### Reports
+
+`reports` was used to generate some reports about comparing more than one calendar. You will not need this.
+
 ### Possible future extensions
 
-The following are not in the initial release, but could be added
+The file [todos](docs/TODOS.md) contains some possible future extensions that are not in the initial release, but could be added
 later.
-
-* write an HTML file (file path and name) with a report for display and for web applications
-or write a plain text file (file path and name).
-* options:
-  * start year from Advent (default: January 1).
-  * options for the cases that *Common Worship* allows (e.g. moving
-    certain holy days to a Sunday, date of celebration of Matthias, etc)
-* to include  in the calendar:
-  * Sundays e.g. 16th Sunday after Trinity
-  * Fridays and other fasts (eves)
-  * ember days
-  * seasons and martyrs (in colour)
 
 ## Points to note ##
 
@@ -191,36 +199,15 @@ The program ensures that dates are bumped correctly [hopefully].
 
 ## Derivation of the data
 
-The calendar files that are input into the program are generated by
-the `process_data` program, which inputs calendar data extracted frm
+The calendar files that are input into the program were originally generated from
+calendar data extracted from
 Wikipedia, as listed in the
 [list](https://en.wikipedia.org/wiki/List_of_Anglican_Church_calendars)
-of Anglican Church calendars. The `process_data` program only reads
-the wiki markup for the actual list of holy days, so that needs to be
+of Anglican Church calendars. 
 
 ## Development to-do
 
-* see TODO in code
-  * ensure there are no saint's days in Holy Week
-  * improve error processing
-    * don't panic, send an error
-    * make error reports more friendly to users
-  * liturgical colours do not match HKSKH calendar, fix (code problem or data?)
-  * add more tests
-    * tests for Advent Sunday and St George's Day
-  * get rid of 'other' and 'description fields
-  * what is the festival class for Corpus Christi?
-  * fix scripts (make all calendars and make calendar) using spreadsheets
-* maybe
-    * add Sundays
-        * correct numbering/'Last..'
-        * cutoff before Advent/Lent (number of Sundays varies year on year)
-    * add other days such as 
-        * Ember Days
-        * week of Christian Unity
-    * clashes of holy days
-        * correct processing (remove/downgrade)
-        * show explanation in report, same as calendar
-    * add other sources for links than Wikipedia (what?)
-    
+See [todos](docs/TODO.md) for known problems and possible enhancements.
+
+
 

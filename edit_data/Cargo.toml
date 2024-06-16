@@ -1,6 +1,6 @@
 [package]
 name = "edit_data"
-version = "0.1.0"
+version = "0.2.2"
 authors = ["martin <m.e@acm.org>"]
 edition = "2018"
 

@@ -1,8 +1,8 @@
-/*! outputs a [super::Calendar] to a spreadsheet */
+/*! outputs a [Calendar](super::Calendar) to a spreadsheet */
 use super::{CalendarError, DateCal, DateCalDiscriminants};
 use rust_xlsxwriter::{Color, Format, FormatBorder, Workbook, XlsxError};
 use std::path::Path;
-use strum::{EnumCount, IntoEnumIterator, VariantArray, VariantNames};
+use strum::{EnumCount, /* IntoEnumIterator, */ VariantArray, VariantNames};
 
 impl super::Calendar {
     /** `write_to_spreadsheet` writes a [super::Calendar] to a spreadsheet */
@@ -60,7 +60,7 @@ impl super::Calendar {
              spreadsheet.\n\nFor advice on changing the Holydays, see the \"Advice\" tab.",
             &long_format,
         )?;
-        row += 1;
+        // row += 1;
         worksheet.autofit();
         worksheet.set_column_width(2, 20)?;
 
@@ -154,7 +154,7 @@ impl super::Calendar {
             ),
             &advice_format,
         )?;
-        row += 1;
+        // row += 1;
         worksheet.autofit();
 
         let worksheet = workbook.add_worksheet();
@@ -183,7 +183,7 @@ impl super::Calendar {
         worksheet.write_with_format(0, col, "References", &bold_format)?;
         col += 1;
         worksheet.write_with_format(0, col, "Attributes", &bold_format)?;
-        col += 1;
+        // col += 1;
         for (index, day) in self.holydays.iter().enumerate() {
             let mut col = 0;
             worksheet.write((index + 1) as u32, col, day.title())?;
@@ -290,7 +290,7 @@ impl super::Calendar {
                 .collect::<Vec<_>>()
                 .join("|");
             worksheet.write((index + 1) as u32, col, &mains)?;
-            col += 1;
+            // col += 1;
 
             /* TODO    other? description? */
         }
@@ -305,3 +305,20 @@ impl super::Calendar {
 impl From<XlsxError> for super::CalendarError {
     fn from(err: XlsxError) -> Self { Self::new(&format!("spreadsheet error {err}")) }
 }
+
+/*
+
+Copyright ©2019-2024 Martin Ellison.  This program is free software: you
+can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see
+[licenses](https://www.gnu.org/licenses/). */
