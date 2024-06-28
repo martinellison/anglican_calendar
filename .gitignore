@@ -1,16 +1,21 @@
 **/#*
+**/src/#*
+**/src/.#*
 **/target/**
 **/target/debug/**
+*.edits
 *.o
 *~
+README.html
+data/fix1
+data/raw
 docs/#*
 process_data/target/*
 process_data/target/**
 process_data/target/debug/**
 src/#*
 src/.#*
+data/fixes-used.ron
+bin/*
+**/.~lock.*.xlsx#
 
-data/fix1
-
-README.html
-*.edits

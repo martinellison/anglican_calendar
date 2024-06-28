@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.package]
 # name = "anglican_calendar"
 readme="README.md"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 keywords=["religious", "Christian", "Anglican", "calendar", "festival"]
 authors = ["Martin <m.e@acm.org>]"]

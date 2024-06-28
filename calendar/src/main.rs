@@ -16,9 +16,9 @@ This program is free software: you can redistribute it and/or modify
     along with this program.  If not, see
     [licenses](https://www.gnu.org/licenses/)..
 */
-mod calendar;
+mod perpetual;
 mod year_calendar;
-use crate::calendar::CalendarError;
+use crate::{perpetual::CalendarError, year_calendar::year_calendar::YearCalendar};
 use ansi_term::Colour::*;
 use log::debug;
 use simplelog::{LevelFilter, SimpleLogger};
@@ -67,11 +67,11 @@ fn run() -> Result<()> {
         debug!("reading from old format file");
         let inf = File::open(opt.calendar_filename).map_err(CalendarError::from_error)?;
         let mut br = BufReader::new(inf);
-        calendar::Calendar::read(&mut br)?
+        perpetual::calendar::Calendar::read(&mut br)?
     } else {
-        calendar::from_spreadsheet::read_from_spreadsheet(Path::new(&opt.calendar_filename))?
+        perpetual::from_spreadsheet::read_from_spreadsheet(Path::new(&opt.calendar_filename))?
     };
-    let year_cal = year_calendar::YearCalendar::from_calendar(&cal, opt.year, opt.verbose)?;
+    let year_cal = YearCalendar::from_calendar(&cal, opt.year, opt.verbose)?;
     // if opt.verbose {
     debug!("{}", Green.paint("year calendar"));
     // println!("{:#?}", year_cal);

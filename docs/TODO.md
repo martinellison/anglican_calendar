@@ -4,24 +4,37 @@
 
 ## Correctness of existing functions and data
 
-Comparing
-  1. the output of the current version (0.2.2), run against HKSKH spreadsheet for 2024, and
-  1. the calendar published by the HKSKH RERC. Note: this does not directly display the level of each holyday (or does it?).
 
-* check/fix calculation for Baptism of Christ [0.2.2 2024 ok]
-* Corpus Christi 
+* check/fix calculation for Baptism of Christ [0.2.3 2024 ok]
+* Corpus Christi [0.2.3 testing]
   * *per* *CW* Corpus Christi is an optional Festival with its own transfer rule
-  * the code has a special `CorpusChristi` class [0.2.2 2024 wrong date and colour]
-* ensure there are no saints' days in Holy Week [0.2.2 Annunciation is wrong, others not tested for 2024]
-* add tests for Advent Sunday and St George's Day (and above cases)
+  * the code has a special `CorpusChristi` class [0.2.3 2024 wrong date and colour]
+* ensure there are no saints' days in Holy Week [0.2.3 Annunciation is wrong, others not tested for 2024]
+* add tests for Advent Sunday and St George's Day [0.2.3 testing] (and above cases)
 * seasons and martyrs (in colour)
   * clashes of holy days
     * correct processing (remove/downgrade)
     * show explanation in report, same as calendar
 
+### Current (0.2.3) issues
+
+Comparing
+  1. the output of the current version (0.2.3), run against HKSKH spreadsheet for 2024, and
+  1. the calendar published by the HKSKH RERC. Note: this does not directly display the level of each holyday (or does it?).
+
+* St Matthias should be martyr  [0.2.3 testing]
+* Annunciation — wrong date [0.2.3 testing]
+* Maundy Thursday — colour should be white [0.2.3 testing]
+* Holy Saturday should be holy day grey?
+* Trinity, Corpus Christi, SS Anne and Joachim, SS Mary etc, St Ignatius, St Dominic, St Gregory — colour all should be white
+* BVM — date etc
+* St John Chr. — colour should be white
+* St Jerome — ?
+* All Souls', St Francis X, St Clement, St Ambrose — colour all should be white
+
 ## Enhancements
 
-The following are not in the 0.2.1 release, but could be added
+The following are not in the 0.2.3 release, but could be added
 later.
 
 * add Sundays
@@ -43,6 +56,7 @@ later.
     certain holy days to a Sunday, date of celebration of Matthias, etc)
 * write an HTML file (file path and name) with a report for display and for web applications
 or write a plain text file (file path and name).
+* multiple languages (e.g. English and Chinese) for the same province/calendar.
 
 ## iCal calendars
 

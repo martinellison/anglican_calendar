@@ -21,11 +21,9 @@ Check the command line options for the specific details of how to carry out thes
 // extern crate anglican_calendar;
 // extern crate structopt;
 //use crate::calendar;
-use ::calendar::calendar::CalendarError;
+use ::calendar::perpetual::CalendarError;
 use ansi_term::Colour::*;
-use calendar::calendar;
 use log::debug;
-use ron::ser::to_string_pretty;
 //use std::error::Error;
 use simplelog::{LevelFilter, SimpleLogger};
 use std::{
@@ -36,6 +34,7 @@ use std::{
 use structopt::StructOpt;
 /// a value or an error code
 type Result<T> = std::result::Result<T, CalendarError>;
+use ::calendar::perpetual::calendar::Calendar;
 
 fn main() {
     println!(
@@ -65,7 +64,7 @@ fn run() -> Result<()> {
         debug!("options: {:?}", opt);
     }
     //  debug!("got opts {:?}", &opt);
-    let mut cal: Option<calendar::Calendar> = None;
+    let mut cal: Option<Calendar> = None;
     let is_editing = opt.in_file.is_some() && opt.out_file.is_some();
     if opt.in_file.is_some() {
         debug!(
@@ -80,11 +79,11 @@ fn run() -> Result<()> {
 
         let infn = opt.in_file.ok_or(CalendarError::new("missing input"))?;
         let mut read_cal = if opt.from_old_format {
-            let inf = File::open(&infn).map_err(calendar::CalendarError::from_error)?;
+            let inf = File::open(&infn).map_err(CalendarError::from_error)?;
             let mut br = BufReader::new(inf);
-            calendar::Calendar::read(&mut br)?
+            Calendar::read(&mut br)?
         } else {
-            calendar::from_spreadsheet::read_from_spreadsheet(Path::new(&infn))?
+            ::calendar::perpetual::from_spreadsheet::read_from_spreadsheet(Path::new(&infn))?
         };
         read_cal.clean_up();
         debug!("calendar read");
@@ -135,20 +134,20 @@ fn run() -> Result<()> {
     //     }
     // }
     match opt.sort {
-        calendar::HolydaySort::NoSort => {},
-        calendar::HolydaySort::Normal => {
+        ::calendar::perpetual::HolydaySort::NoSort => {},
+        ::calendar::perpetual::HolydaySort::Normal => {
             debug!("sorting normally");
             if let Some(c) = &mut cal {
                 c.sort();
             }
         },
-        calendar::HolydaySort::DateCal => {
+        ::calendar::perpetual::HolydaySort::DateCal => {
             debug!("sorting by date");
             if let Some(c) = &mut cal {
                 c.sort_by_date_cal();
             }
         },
-        calendar::HolydaySort::Tag => {
+        ::calendar::perpetual::HolydaySort::Tag => {
             debug!("sorting by tag");
             if let Some(c) = &mut cal {
                 c.sort_by_tag();
@@ -186,7 +185,7 @@ fn run() -> Result<()> {
             let mut bw = bwb.as_mut();
             if let Some(c) = &mut cal {
                 let descr = opt.descr.clone().unwrap_or("".to_string());
-                c.info = calendar::FileInfo::new(&descr, "edit data");
+                c.info = ::calendar::perpetual::FileInfo::new(&descr, "edit data");
                 c.write(&mut bw).map_err(CalendarError::from_error)?
             }
         }
@@ -195,7 +194,7 @@ fn run() -> Result<()> {
         if let Some(c) = &mut cal {
             debug!("dumping the calendar");
             c.holydays_by_tag.clear();
-            let mut of = File::create(path).map_err(calendar::CalendarError::from_error)?;
+            let mut of = File::create(path).map_err(CalendarError::from_error)?;
             write!(
                 of,
                 "/* you want to format this */ 
@@ -213,7 +212,7 @@ fn run() -> Result<()> {
     Ok(())
 }
 fn open_out_file(fpath: &str) -> Result<Box<dyn Write>> {
-    let of = File::create(fpath).map_err(calendar::CalendarError::from_error)?;
+    let of = File::create(fpath).map_err(CalendarError::from_error)?;
     Ok(Box::new(BufWriter::new(of)))
 }
 
@@ -241,7 +240,7 @@ pub struct Opt {
     descr: Option<String>,
     /// Sort calendar data for output Normal/DateCal
     #[structopt(short = "s", long = "sort", default_value)]
-    sort: calendar::HolydaySort,
+    sort: ::calendar::perpetual::HolydaySort,
     /// read from old format file
     #[structopt(short = "f", long = "from_old_format")]
     from_old_format: bool,

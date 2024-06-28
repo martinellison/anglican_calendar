@@ -1,14 +1,14 @@
 /*! test using a specific year calendar for transfers */
 use super::*;
-use crate::calendar::{HolydayClass, HolydayRef};
+use crate::perpetual::{calendar::Calendar, CalendarError, HolydayClass, HolydayRef};
 // use std::borrow::Borrow;
 use std::boxed;
+use year_calendar::YearCalendar;
 
 const YEAR: i32 = 2024;
 #[test]
 fn test_year_2024_days() -> Result<()> {
-    let year_cal =
-        crate::year_calendar::YearCalendar::from_calendar(&create_calendar(), YEAR, false)?;
+    let year_cal = YearCalendar::from_calendar(&create_calendar(), YEAR, false)?;
 
     for test_case in [
         (1, 1, "The Holy Name", HolydayClass::Festival, "white"),
@@ -20,10 +20,46 @@ fn test_year_2024_days() -> Result<()> {
             "white",
         ),
         (2, 23, "St Polycarp", HolydayClass::Commemoration, "purple"),
+        (2, 24, "St Matthias", HolydayClass::Festival, "red"), // per HKSKH not CofE CW
+        (3, 28, "MAUNDY THURSDAY", HolydayClass::Principal, "white"),
+        (3, 29, "GOOD FRIDAY", HolydayClass::Principal, "red"),
+        (
+            4,
+            8,
+            "Annunciation Of The Lord",
+            HolydayClass::Principal,
+            "white",
+        ),
         (4, 23, "St George", HolydayClass::Commemoration, "red"),
+        (
+            5,
+            30,
+            "Corpus Christi",
+            HolydayClass::CorpusChristi,
+            "white",
+        ),
+        (
+            7,
+            31,
+            "St Ignatius of Loyola",
+            HolydayClass::LesserFestival,
+            "white",
+        ),
+        (11, 1, "All Saints' Day", HolydayClass::Principal, "white"),
+        (11, 2, "All Souls' Day", HolydayClass::Festival, "white"),
+        (
+            12,
+            1,
+            "Advent Sunday",
+            HolydayClass::Sunday, /* ? not in CW */
+            "purple",
+        ),
     ] {
         let date = NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1).unwrap();
-        let holyday = year_cal.holydays_by_date.get(&date).unwrap();
+        let holyday_opt = year_cal.holydays_by_date.get(&date);
+        let holyday = holyday_opt.ok_or_else(|| {
+            CalendarError::new(&format!("expected a holy day on {date} ({})", test_case.2))
+        })?;
         let desc = format!(
             "for {}-{:02}-{:02} ({})",
             YEAR, test_case.0, test_case.1, test_case.2
@@ -42,1585 +78,1620 @@ fn test_year_2024_days() -> Result<()> {
 }
 #[test]
 fn test_year_2024_nondays() -> Result<()> {
-    let year_cal =
-        crate::year_calendar::YearCalendar::from_calendar(&create_calendar(), YEAR, false)?;
+    let year_cal = YearCalendar::from_calendar(&create_calendar(), YEAR, false)?;
     {
         {
-            let test_case = (1, 3, "(not a holy day)");
-            let desc = format!(
-                "for {}-{:02}-{:02} ({})",
-                YEAR, test_case.0, test_case.1, test_case.2
-            );
-            let day = year_cal
-                .holydays_by_date
-                .get(&NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1).unwrap());
+            for test_case in [
+                (1, 3, "(not a holy day)"),
+                (3, 25, "Annunciation moved"),
+                (7, 1, "(not a holy day)"),
+            ] {
+                let desc = format!(
+                    "for {}-{:02}-{:02} ({})",
+                    YEAR, test_case.0, test_case.1, test_case.2
+                );
+                let day = year_cal
+                    .holydays_by_date
+                    .get(&NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1).unwrap());
 
-            assert!(
-                day.is_none(),
-                "{desc} should not be a holy day (this year), found {day:?}",
-            );
+                assert!(
+                    day.is_none(),
+                    "{desc} should not be a holy day (this year), found {day:#?}",
+                );
+            }
         }
     }
     Ok(())
 }
 #[test]
 fn test_year_2024_should_drop() -> Result<()> {
-    let year_cal =
-        crate::year_calendar::YearCalendar::from_calendar(&create_calendar(), YEAR, false)?;
+    let year_cal = YearCalendar::from_calendar(&create_calendar(), YEAR, false)?;
     {
         {
-            let test_case = (8, 11, "St Clare of Assisi");
-            let desc = format!(
-                "for {}-{:02}-{:02} ({})",
-                YEAR, test_case.0, test_case.1, test_case.2
-            );
-            let day = year_cal
-                .holydays_by_date
-                .get(&NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1).unwrap());
-
-            assert!(
-                day.unwrap()[0].drop_status != DropStatus::Keep,
-                "{desc} should not be kept as a holy day (this year), found {day:#?}",
-            );
+            for test_case in [
+                (5, 9, "St Christopher"),
+                (8, 11, "St Clare of Assisi"),
+                (12, 29, "St Thomas Becket"),
+            ] {
+                let desc = format!(
+                    "for {}-{:02}-{:02} ({})",
+                    YEAR, test_case.0, test_case.1, test_case.2
+                );
+                let cal_day_opt = NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1);
+                assert!(cal_day_opt.is_some(), "bad day {test_case:?}");
+                let day_opt = year_cal.holydays_by_date.get(&cal_day_opt.unwrap());
+                assert!(day_opt.is_some(), "no day {test_case:?}");
+                let mut found = false;
+                for day in day_opt.unwrap() {
+                    if day.drop_status != DropStatus::Keep {
+                        found = true;
+                    }
+                }
+                assert!(
+                    found,
+                    "{desc} should not be kept as a holy day (this year), found {day_opt:#?}",
+                );
+            }
         }
     }
     Ok(())
 }
-fn create_calendar() -> crate::calendar::Calendar {
-    crate::calendar::Calendar {
-        info: crate::calendar::FileInfo {
+fn create_calendar() -> Calendar {
+    Calendar {
+        info: crate::perpetual::FileInfo {
             description: "".to_owned(),
             created: chrono::DateTime::from_timestamp(1716957640, 0)
                 .expect("bad date")
                 .into(),
             creation: "edit data".to_owned(),
         },
-        province: crate::calendar::Province::HongKong,
+        province: crate::perpetual::Province::HongKong,
         holydays: vec![
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "EASTER DAY".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Easter".to_owned(),
                         description: "Easter".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Paschal Full Moon".to_owned(),
                         description: "Paschal Full Moon".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Easter".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Easter,
-                transfer: crate::calendar::TransferType::Normal,
+                date_cal: crate::perpetual::DateCal::Easter,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Advent Sunday".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Sunday,
+                class: crate::perpetual::HolydayClass::Sunday,
                 tag: "Advent".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::AdventNext,
-                transfer: crate::calendar::TransferType::DoNotTransfer,
+                date_cal: crate::perpetual::DateCal::AdventNext,
+                transfer: crate::perpetual::TransferType::DoNotTransfer,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "ASH WEDNESDAY".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Ash Wednesday".to_owned(),
                     description: "Ash Wednesday".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Ash Wednesday".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: -46i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Palm Sunday".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Palm Sunday".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: -7i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "MAUNDY THURSDAY".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Maundy Thursday".to_owned(),
                     description: "Maundy Thursday".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Maundy Thursday".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: -3i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "GOOD FRIDAY".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Good Friday".to_owned(),
                     description: "Good Friday".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Good Friday".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: -2i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "ASCENSION DAY".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Ascension Day".to_owned(),
                     description: "Ascension Day".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Ascension".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: 39i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "DAY OF PENTECOST".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Pentecost".to_owned(),
                     description: "Pentecost".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Pentecost".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: 49i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "TRINITY SUNDAY".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Trinity Sunday".to_owned(),
                     description: "Trinity Sunday".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Trinity Sunday".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: 56i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Corpus Christi".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Corpus Christi (feast)".to_owned(),
                     description: "Corpus Christi (feast)".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::CorpusChristi,
+                class: crate::perpetual::HolydayClass::CorpusChristi,
                 tag: "Corpus Christi".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::Easter),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Easter),
                     rel: 60i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Christ the King".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Christ The King".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::After {
-                    date: boxed::Box::new(crate::calendar::DateCal::AdventNext),
+                date_cal: crate::perpetual::DateCal::After {
+                    date: boxed::Box::new(crate::perpetual::DateCal::AdventNext),
                     rel: -7i16,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Holy Name".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "The Holy Name".to_owned(),
                     description: "The Holy Name".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Holy Name".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 1u8,
                     day: 1u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Basil the Great & Gregory of Nazianzus".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "379 and 389".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Basil of Caesarea".to_owned(),
                         description: "Basil of Caesarea".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Gregory of Nazianzus".to_owned(),
                         description: "Gregory of Nazianzus".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Basil Gregory".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 1u8,
                     day: 2u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Baptism of Christ".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Baptism of the Lord".to_owned(),
                     description: "Baptism of the Lord".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Baptism Of Christ".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::NextSunday {
-                    date: boxed::Box::new(crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::NextSunday {
+                    date: boxed::Box::new(crate::perpetual::DateCal::Fixed {
                         month: 1u8,
                         day: 6u8,
                     }),
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Epiphany".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Epiphany (holiday)".to_owned(),
                     description: "Epiphany (holiday)".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Epiphany".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 1u8,
                     day: 6u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Conversion of St. Paul".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Conversion of St. Paul".to_owned(),
                     description: "Conversion of St. Paul".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Conversion Of St. Paul".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 1u8,
                     day: 25u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Timothy & Titus".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Saint Timothy".to_owned(),
                         description: "Saint Timothy".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Titus (Biblical)".to_owned(),
                         description: "Titus (Biblical)".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Timothy Titus".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 1u8,
                     day: 26u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Thomas Aquinas".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "1274".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Thomas Aquinas".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 1u8,
                     day: 28u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Presentation of Christ".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Presentation of Jesus at the Temple".to_owned(),
                     description: "Presentation of Jesus at the Temple".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Presentation".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 2u8,
                     day: 2u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Polycarp".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Polycarp".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 2u8,
                     day: 23u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Matthias".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Saint Matthias".to_owned(),
                     description: "Saint Matthias".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Matthias".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 2u8,
                     day: 24u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Patrick".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "460".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Saint Patrick".to_owned(),
                     description: "Saint Patrick".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Patrick".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 3u8,
                     day: 17u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Joseph".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Saint Joseph".to_owned(),
                         description: "Saint Joseph".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Mary (mother of Jesus)".to_owned(),
                         description: "Mary (mother of Jesus)".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Joseph".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 3u8,
                     day: 19u8,
                 },
-                transfer: crate::calendar::TransferType::Joseph,
+                transfer: crate::perpetual::TransferType::Joseph,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Annunciation Of The Lord".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Annunciation".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 3u8,
                     day: 25u8,
                 },
-                transfer: crate::calendar::TransferType::Annunciation,
+                transfer: crate::perpetual::TransferType::Annunciation,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Anselm".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "1109".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Anselm of Canterbury".to_owned(),
                     description: "Anselm of Canterbury".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Anselm".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 4u8,
                     day: 21u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St George".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "304".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Saint George".to_owned(),
                     description: "Saint George".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "George".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 4u8,
                     day: 23u8,
                 },
-                transfer: crate::calendar::TransferType::George,
+                transfer: crate::perpetual::TransferType::George,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Mark".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Mark".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 4u8,
                     day: 25u8,
                 },
-                transfer: crate::calendar::TransferType::Mark,
+                transfer: crate::perpetual::TransferType::Mark,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Philip & James".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "James, son of Alphaeus".to_owned(),
                         description: "James, son of Alphaeus".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Philip the Apostle".to_owned(),
                         description: "Philip the Apostle".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "James Philip".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 5u8,
                     day: 1u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Christopher".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Christopher".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 5u8,
                     day: 9u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::DropOnClash,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Augustine of Canterbury".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "605".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Augustine of Canterbury".to_owned(),
                     description: "Augustine of Canterbury".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Augustine Of Canterbury".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 5u8,
                     day: 26u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Visitation of Mary to Elizabeth".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Visitation (Christian)".to_owned(),
                     description: "Visitation (Christian)".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Visitation".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 5u8,
                     day: 31u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Justin".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Justin".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 6u8,
                     day: 1u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Barnabas".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Barnabas".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 6u8,
                     day: 11u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Nativity of St John the Baptist".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Birth Of John The Baptist".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 6u8,
                     day: 24u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Irenaeus".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Irenaeus".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 6u8,
                     day: 28u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Peter and Paul".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "64 and 67".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Saint Peter".to_owned(),
                         description: "Saint Peter".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Paul the Apostle".to_owned(),
                         description: "Paul the Apostle".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Peter Paul".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 6u8,
                     day: 29u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Thomas".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Thomas the Apostle".to_owned(),
                     description: "Thomas the Apostle".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Thomas".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 3u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Benedict of Nursia".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Benedict".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 11u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Mary Magdalene".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Mary Magdalene".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 22u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St James the Apostle".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "44".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "James, son of Zebedee".to_owned(),
                     description: "James, son of Zebedee".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "James".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 25u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Anne & Joachim".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Anne Joachim".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 26u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Mary, Martha & Lazarus".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Mary Martha Lazarus".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 29u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Ignatius of Loyola".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "1556".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Ignatius of Loyola".to_owned(),
                     description: "Ignatius of Loyola".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::LesserFestival,
                 tag: "Ignatius Of Loyola".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 7u8,
                     day: 31u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Transfiguration of Our Lord".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Transfiguration".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 6u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Dominic".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Dominic".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 8u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Laurence".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Laurence".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 10u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Clare of Assisi".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "1253".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Clare".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 11u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Bartholomew".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Bartholomew the Apostle".to_owned(),
                     description: "Bartholomew the Apostle".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Bartholomew".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 24u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Augustine of Hippo".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "430".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Augustine of Hippo".to_owned(),
                     description: "Augustine of Hippo".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Augustine Hippo".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 28u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Beheading of St John the Baptist".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Beheading John Baptist".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 8u8,
                     day: 29u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Gregory the Great".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "604".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Pope Gregory I".to_owned(),
                     description: "Pope Gregory I".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Gregory I".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 3u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Blessed Virgin Mary".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Mary (mother of Jesus)".to_owned(),
                     description: "Mary (mother of Jesus)".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Mary".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 8u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St John Chrysostom".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "407".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "John Chrysostom".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 13u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Holy Cross Day".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Holy Cross".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 14u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Matthew".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Matthew".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 21u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Michael and All Angels".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "Michael (archangel)".to_owned(),
                     description: "Michael (archangel)".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Michael All Angels".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 29u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Jerome".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "420".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Jerome".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 9u8,
                     day: 30u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Francis of Assisi".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "1226".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Francis Of Assisi".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 10u8,
                     day: 4u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Luke".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Luke".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 10u8,
                     day: 18u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "SS Simon & Jude".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
                 refs: vec![
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Simon the Zealot".to_owned(),
                         description: "Simon the Zealot".to_owned(),
                     },
-                    crate::calendar::Reference {
-                        website: crate::calendar::WebSite::Wikipedia,
+                    crate::perpetual::Reference {
+                        website: crate::perpetual::WebSite::Wikipedia,
                         article: "Jude the Apostle".to_owned(),
                         description: "Jude the Apostle".to_owned(),
                     },
                 ],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Simon Jude".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 10u8,
                     day: 28u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "All Saints' Day".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "All Saints' Day".to_owned(),
                     description: "All Saints' Day".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "All Saints".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 11u8,
                     day: 1u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "All Souls' Day".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "All Souls' Day".to_owned(),
                     description: "All Souls' Day".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "All Souls".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 11u8,
                     day: 2u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Cecilia".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Cecilia".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 11u8,
                     day: 22u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Catharine of Alexandria".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Catherine".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 11u8,
                     day: 25u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Andrew".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "38".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Andrew".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 11u8,
                     day: 30u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Francis Xavier".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "1552".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Francis Xavier".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 3u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Clement of Alexandria".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Clement Alexandria".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 5u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Nicholas".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Nicholas".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 6u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St Ambrose".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Ambrose".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 7u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Christmas Eve".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Commemoration,
+                class: crate::perpetual::HolydayClass::Commemoration,
                 tag: "Christmas Eve".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 24u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Christmas Day".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Principal,
+                class: crate::perpetual::HolydayClass::Principal,
                 tag: "Christmas".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 25u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "St John the Evangelist".to_owned(),
                 description: "".to_owned(),
                 main: std::collections::HashSet::from([]),
                 other: vec![],
                 death: "100".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "John".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 27u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "The Holy Innocents".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Holy Innocents".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 28u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
             }),
-            HolydayRef::new(crate::calendar::Holyday {
+            HolydayRef::new(crate::perpetual::Holyday {
                 title: "Saint Stephen".to_owned(),
                 description: "".to_owned(),
-                main: std::collections::HashSet::from([crate::calendar::MainAttribute::Martyr]),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
                 other: vec![],
                 death: "".to_owned(),
-                refs: vec![crate::calendar::Reference {
-                    website: crate::calendar::WebSite::Wikipedia,
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
                     article: "".to_owned(),
                     description: "".to_owned(),
                 }],
-                class: crate::calendar::HolydayClass::Festival,
+                class: crate::perpetual::HolydayClass::Festival,
                 tag: "Stephen".to_owned(),
                 has_eve: false,
-                date_cal: crate::calendar::DateCal::Fixed {
+                date_cal: crate::perpetual::DateCal::Fixed {
                     month: 12u8,
                     day: 26u8,
                 },
-                transfer: crate::calendar::TransferType::Normal,
+                transfer: crate::perpetual::TransferType::Normal,
+            }),
+            HolydayRef::new(crate::perpetual::Holyday {
+                // TODO add to calendar
+                title: "Thomas Beckett".to_owned(),
+                description: "".to_owned(),
+                main: std::collections::HashSet::from([crate::perpetual::MainAttribute::Martyr]),
+                other: vec![],
+                death: "".to_owned(),
+                refs: vec![crate::perpetual::Reference {
+                    website: crate::perpetual::WebSite::Wikipedia,
+                    article: "".to_owned(),
+                    description: "".to_owned(),
+                }],
+                class: crate::perpetual::HolydayClass::LesserFestival,
+                tag: "Thomas Beckett".to_owned(),
+                has_eve: false,
+                date_cal: crate::perpetual::DateCal::Fixed {
+                    month: 12u8,
+                    day: 29u8,
+                },
+                transfer: crate::perpetual::TransferType::DropOnClash,
             }),
         ],
         holydays_by_tag: std::collections::HashMap::from([]),

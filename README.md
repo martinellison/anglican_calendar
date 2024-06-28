@@ -24,6 +24,11 @@ This project has been revised to change the main input format to spreadsheets as
 
 Old format input files can be converted; see `scripts/make-spreadsheets.sh` for an example script.
 
+### version 0.2.3
+
+This is an interim development (alpha) version. It should build and run, also the tests should all run now. It is an improvement on 0.2.2, in that the output is closer to correct. Also, it has been refactored extensively.
+
+However, the calendar that I am using for testing (Hong Kong) still does not match the official calendar issued by the Church authorities, so I need to revise the input file. Also, I need to add some other calendars, at least the 1662 BCP calendar.
 
 ## How to do
 
@@ -146,7 +151,7 @@ requests on GitHub if you can.
 
 ## The functionality of the executable
 
-The main executable (`calendar`) generates the iCal files.
+The main executable (`calendar`) generates the iCal files and a report, as selected by command line options (see `calendar --help`).
 
 The functionality of the executable is performed by library
 crates called from the main program, so that other programs can access

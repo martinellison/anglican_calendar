@@ -2,7 +2,7 @@
 
 Libraries for creating iCal calendars for the calendars (lists of
 holy days) of the national churches of the Anglican Communion. */
-pub mod calendar;
+pub mod perpetual;
 pub mod year_calendar;
 /* Copyright ©2019-2024 Martin Ellison.  This program is free software: you
 can redistribute it and/or modify it under the terms of the GNU

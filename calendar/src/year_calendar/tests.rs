@@ -1,12 +1,41 @@
 use super::*;
-use crate::calendar::{DateCal, Holyday, TransferType};
+use crate::{
+    perpetual::{DateCal, Holyday, TransferType},
+    year_calendar::HolydayRef,
+};
+use chrono::Datelike;
+use year_calendar::YearCalendar;
 
+#[test]
+fn test_nearby_sundays() {
+    let year = Year::new(2024);
+    // note: not used in HKSKH
+    let d = year.nearby_sunday(NaiveDate::from_ymd_opt(2024, 1, 6).unwrap(), -4);
+    assert_eq!(
+        d,
+        NaiveDate::from_ymd_opt(2024, 1, 7).unwrap(),
+        "Epiphany 2024"
+    );
+    let d = year.nearby_sunday(NaiveDate::from_ymd_opt(2024, 2, 2).unwrap(), -5);
+    assert_eq!(
+        d,
+        NaiveDate::from_ymd_opt(2024, 2, 4).unwrap(),
+        "Candlemas 2024"
+    );
+    let d = year.nearby_sunday(NaiveDate::from_ymd_opt(2024, 11, 1).unwrap(), -2);
+    assert_eq!(
+        d,
+        NaiveDate::from_ymd_opt(2024, 11, 3).unwrap(),
+        "All Saints' 2024"
+    );
+    // FUTURE add more cases
+}
 #[test]
 fn test_transfers() {
     let day_holydays: Vec<YearHolyday> = vec![];
     let year = Year::new(2019);
     let mut year_holyday =
-        YearHolyday::from_holyday(&calendar::HolydayRef::new(Holyday::default()), &year).unwrap();
+        YearHolyday::from_holyday(&HolydayRef::new(Holyday::default()), &year).unwrap();
     let ye_exp = year_holyday.clone();
     let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
     assert_eq!(DropStatus::Keep, er);
@@ -19,14 +48,13 @@ fn test_easter() {
     let holyday = Holyday {
         title: "EASTER DAY".to_string(),
         description: "EASTER DAY, the first Sunday after the Paschal full moon".to_string(),
-        class: calendar::HolydayClass::Principal,
+        class: HolydayClass::Principal,
         tag: "easter day".to_string(),
-        date_cal: calendar::DateCal::Easter,
-        transfer: calendar::TransferType::Normal,
+        date_cal: DateCal::Easter,
+        transfer: TransferType::Normal,
         ..Holyday::default()
     };
-    let mut year_holyday =
-        YearHolyday::from_holyday(&calendar::HolydayRef::new(holyday), &year).unwrap();
+    let mut year_holyday = YearHolyday::from_holyday(&HolydayRef::new(holyday), &year).unwrap();
     let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
     assert_eq!(DropStatus::Keep, er);
     assert_eq!(
@@ -186,21 +214,20 @@ fn test_year(year_ad: i32, tests: &Vec<(DateCal, TransferType, Option<NaiveDate>
         let holyday = Holyday {
             title: "test".to_string(),
             description: "test descr".to_string(),
-            class: calendar::HolydayClass::Principal,
+            class: HolydayClass::Principal,
             tag: "test tag".to_string(),
             date_cal: dc.clone(),
             transfer: *t,
             ..Holyday::default()
         };
-        let mut year_holyday =
-            YearHolyday::from_holyday(&calendar::HolydayRef::new(holyday), &year).unwrap();
+        let mut year_holyday = YearHolyday::from_holyday(&HolydayRef::new(holyday), &year).unwrap();
         let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
         assert_eq!(DropStatus::Keep, er);
         assert_eq!(
             *ed_opt,
             Some(year_holyday.date),
             "wrong date, actual week day {:?}",
-            year_holyday.date.weekday()
+            year_holyday.date().weekday()
         );
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "edit_data"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["martin <m.e@acm.org>"]
 edition = "2018"
 
@@ -10,7 +10,7 @@ ansi_term = "0.12.1"
 structopt = "0.3.26"
 ron = "0.8.1"
 serde_derive = "1.0.203"
-log = "0.4.21"
+log = "0.4.22"
 simplelog = "0.12.2"
 convert_case = "0.6.0"
 
