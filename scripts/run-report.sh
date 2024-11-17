@@ -2,6 +2,7 @@
 # run the report
 
 TARG=$1
+OPT=$2
 export BASE=$(git rev-parse --show-toplevel)
 if [[ "$BASE" == "" ]]; then
     echo "need to be in the git repository"
@@ -19,5 +20,5 @@ case "$TARG" in
         echo "unknown target" $TARG
         exit 1
 esac
-$BINDIR/calendar -c data/spreads/hkskh-2024.xlsx --unique hkskh --year 2024 --report /tmp/hkskh.html
+$BINDIR/calendar -c data/spreads/hkskh-2024.xlsx report --year 2025 --report /tmp/hkskh.html $OPT
 echo "done"

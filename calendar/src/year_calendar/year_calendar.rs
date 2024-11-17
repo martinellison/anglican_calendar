@@ -3,13 +3,14 @@ use crate::{
     perpetual::{calendar::Calendar, CalendarError, Province, TransferType},
     year_calendar::{
         DropReason, DropStatus, HolydayClass, ReportDate, ReportHolyday, ReportTemplate, Result,
-        Year, YearHolyday,
+        WallTemplate, Year, YearHolyday,
     },
 };
 use ansi_term::Colour::*;
 use askama::Template;
 use chrono::{Datelike, Duration, NaiveDate, Weekday};
 use icalendar::{Component, EventLike};
+use log::debug;
 // use icalendar::*;
 use std::{collections::HashMap, io::Write};
 
@@ -30,19 +31,13 @@ impl YearCalendar {
             province: calendar.province,
             holydays_by_date: HashMap::new(),
         };
-        for e in calendar.get_holydays() {
-            let mut year_holyday = YearHolyday::from_holyday(&e, &ycal.year)?;
-            // println!(
-            //     "{}",
-            //     Green.bold().paint(format!(
-            //         "converting {} ({:?}) {}",
-            //         e.title(),
-            //         e.class(),
-            //         year_holyday.colour(&y)
-            //     ))
-            // );
-            ycal.add(&mut year_holyday, &y, verbose, true)?; // TODO program
-                                                             // option keep_dropped
+        for hd in calendar.get_holydays() {
+            let mut year_holyday = YearHolyday::from_holyday(&hd, &ycal.year, false)?;
+            ycal.add(&mut year_holyday, &y, verbose, true)?; // TODO program option keep_dropped
+            if hd.has_eve() {
+                let mut year_holyday_eve = YearHolyday::from_holyday(&hd, &ycal.year, true)?;
+                ycal.add(&mut year_holyday_eve, &y, verbose, true)?; // TODO program option keep_dropped
+            }
         }
         Ok(ycal)
     }
@@ -81,9 +76,25 @@ impl YearCalendar {
                     .append_property(icalendar::Property::new(
                         "COLOR",
                         &year_holyday.colour(&self.year, &mut advice),
-                    ))
-                    .done();
-                ical.push(e);
+                    ));
+                let refs = year_holyday.holyday.refs();
+                if !refs.is_empty() {
+                    let r#ref = &refs[0];
+                    let desc = r#ref.description.trim();
+                    if let Ok(url) = r#ref.url() {
+                        let url = url.to_string();
+                        if !desc.is_empty() {
+                            debug!(
+                                "adding url \"{}\" to \"{}\"",
+                                &url,
+                                &year_holyday.holyday.title()
+                            );
+                            // somehow it inserts a backslash into the property
+                            e.append_property(icalendar::Property::new("URL", &url));
+                        }
+                    }
+                }
+                ical.push(e.done());
                 let e_del = icalendar::Event::new()
                     .uid(&uid)
                     .append_property(icalendar::Property::new("STATUS", "CANCELLED"))
@@ -98,22 +109,38 @@ impl YearCalendar {
 
     /** Write a human-readable report to a file. */
     pub fn write_report(&self, w: &mut dyn Write) -> Result<()> {
-        let mut rt = ReportTemplate {
-            dates: vec![],
+        let rt = ReportTemplate {
+            dates: self.report_dates(),
             year: self.year.ad,
             province: self.province.to_string(),
         };
+        let r = rt.render().map_err(CalendarError::from_error)?;
+        w.write_all(r.as_bytes()).map_err(CalendarError::from_error)
+    }
+
+    /** `write_wall_calendar` writes a report in wall calendar format */
+    pub fn write_wall_calendar(&self, w: &mut dyn Write) -> Result<()> {
+        let rt = WallTemplate::new(
+            self.province.to_string(),
+            self.year.ad,
+            &self.report_dates(),
+        );
+        let r = rt.render().map_err(CalendarError::from_error)?;
+        w.write_all(r.as_bytes()).map_err(CalendarError::from_error)
+    }
+
+    /** `report_dates` provides the [ReportDate]s for the [Year] */
+    pub fn report_dates(&self) -> Vec<ReportDate> {
         let mut dates: Vec<&NaiveDate> = self.holydays_by_date.keys().collect();
         dates.sort();
+        let mut report_dates = vec![];
         for date in dates {
             let mut advice = vec![];
             // let season_colour = self.year.season_colour(*date, &mut advice);
             let mut rd = ReportDate {
-                // date: *date,
+                date: *date,
                 date_form: date.format("%A %B %e").to_string(),
                 holydays: vec![],
-                // colour_a: colour.colour_a(),
-                // colour_b: season_colour.colour_b(),
             };
             let year_holydays = &self.holydays_by_date[date];
             for year_holyday in year_holydays {
@@ -122,7 +149,7 @@ impl YearCalendar {
                 for r in &year_holyday.holyday.refs() {
                     let desc = r.description.trim();
                     if !desc.is_empty() {
-                        refs_format.push((r.url(), desc.to_string()));
+                        refs_format.push((r.url().unwrap().to_string(), desc.to_string()));
                     }
                 }
                 let mut rhd_advice = advice.clone();
@@ -143,14 +170,13 @@ impl YearCalendar {
                         .collect(),
                     drop_status: year_holyday.drop_status.clone(),
                     advice: rhd_advice,
+                    is_eve: year_holyday.is_eve,
                 };
                 rd.holydays.push(rhd);
             }
-            rt.dates.push(rd);
+            report_dates.push(rd);
         }
-        let r = rt.render().map_err(CalendarError::from_error)?;
-        w.write_all(r.as_bytes()).map_err(CalendarError::from_error)
-        //        Ok(())
+        report_dates
     }
 
     /// add a holyday to a report
@@ -176,9 +202,8 @@ impl YearCalendar {
             }
             let mut de = vec![];
             Self::add_holyday_if_ok(&mut de, year_holyday, year, keep_dropped)?;
-            self.holydays_by_date.insert(year_holyday.date, de); // may insert
-                                                                 // empty list,
-                                                                 // is ok
+            self.holydays_by_date.insert(year_holyday.date, de);
+            // may insert empty list, is ok
         };
         Ok(())
     }

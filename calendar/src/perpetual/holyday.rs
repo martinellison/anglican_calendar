@@ -11,11 +11,11 @@ use serde_derive::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
     collections::HashSet,
-    error::Error,
+    // error::Error,
     hash::{Hash, Hasher},
 };
 
-/** An Holy Day is an holy day in a [Calendar] e.g. the holy days of the Anglican
+/** An Holy Day is an holy day in a [crate::perpetual::calendar::Calendar] e.g. the holy days of the Anglican
 Church of Hong Kong include Easter Sunday and Matteo Ricci.*/
 #[derive(
     Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Getters, MutGetters, CopyGetters, Bake,
@@ -45,7 +45,7 @@ pub struct Holyday {
     /** holy day has eve (and eve is not an specified holy day in its
     own right) */
     #[getset(get_copy = "pub(crate)")]
-    pub has_eve: bool,
+    pub has_eve: bool, // TODO implement (create eves in year calendars)
     /** date calculation */
     pub date_cal: DateCal,
     /** whether and how the holy day must be transferred to another
@@ -91,14 +91,15 @@ impl Holyday {
     //         self.transfer = *t;
     //     }
     // }
-
+    /// is used
     pub(crate) fn cmp_by_date_cal(&self, other: &Self) -> Ordering {
         self.date_cal.cmp(&other.date_cal)
     }
 
+    /// is used
     pub(crate) fn cmp_by_tag(&self, other: &Self) -> Ordering { self.tag.cmp(&other.tag) }
 
-    /** `clean_up` tidies up a Holyday */
+    /** `clean_up` tidies up a Holyday ; is used */
     pub fn clean_up(&mut self) {
         self.tag = self.tag.to_case(Case::Title);
         self.date_cal = self.date_cal.fixed();

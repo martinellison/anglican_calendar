@@ -18,8 +18,8 @@ else
     rustup default stable
     echo "opening IDE"
     codium anglican_calendar.code-workspace &
-    echo "upgrading crates..."
-    cargo upgrade --incompatible
+    # echo "upgrading crates..."
+    # cargo upgrade --incompatible
     echo "updating crates..."
     cargo update 
     echo "fixing..."

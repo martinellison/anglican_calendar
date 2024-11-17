@@ -1,8 +1,9 @@
 /*! Implements the year-independent data for a calendar. */
 
 use ansi_term::Colour::*;
-use chrono::{Local, Utc, Weekday};
+use chrono::{Local, NaiveDate, Utc, Weekday};
 use delegate::delegate;
+use lazy_static::lazy_static;
 use log::debug;
 use serde_derive::{Deserialize, Serialize};
 use std::{
@@ -16,7 +17,9 @@ use std::{
     rc::Rc,
     str::FromStr,
 };
+use strum::{VariantArray, VariantNames};
 use strum_macros::Display;
+use url::Url;
 pub mod from_spreadsheet;
 pub mod to_spreadsheet;
 /// a value or an error code
@@ -536,14 +539,14 @@ impl FromStr for HolydaySort {
 //         }
 //     }
 // }
-/// returns None for an empty string, otherwise Some
-fn some_unless_blank(s: &str) -> Option<String> {
-    if s.is_empty() {
-        None
-    } else {
-        Some(s.to_string())
-    }
-}
+// /// returns None for an empty string, otherwise Some
+// fn some_unless_blank(s: &str) -> Option<String> {
+//     if s.is_empty() {
+//         None
+//     } else {
+//         Some(s.to_string())
+//     }
+// }
 
 /** Holy DayClass is the level of the holy day and can be commemoration, lesser
 festival, festival, principal feast, also unclassified and (ordinary) Sunday*/
@@ -588,14 +591,14 @@ Easter Sunday. */
     PartialOrd,
     Clone,
     Hash,
-    strum::Display,
+    // strum::Display,
     strum::VariantNames,
     strum::EnumDiscriminants,
     strum::EnumCount,
     Bake,
 )]
 #[databake(path = calendar::calendar)]
-#[strum_discriminants(derive(strum::VariantArray))]
+#[strum_discriminants(derive(strum::VariantNames))]
 pub enum DateCal {
     /** Easter Sunday */
     Easter,
@@ -609,16 +612,49 @@ pub enum DateCal {
     "on which the rest depend". For dates before the specified date,
     use a negative number for 'rel' */
     After { date: Box<DateCal>, rel: i16 },
-    /** obsolete, do not use */
-    Next {
-        date: Box<DateCal>,
-        day_of_week: OrderableDayOfWeek,
-    },
+    // /** obsolete, do not use */
+    // Next {
+    //     date: Box<DateCal>,
+    //     day_of_week: OrderableDayOfWeek,
+    // },
     /** the Sunday after a specified date (e.g. Sunday after Epiphany) */
     NextSunday { date: Box<DateCal> },
     /** a date specified by month and day; may be in the previous
     calendar year (depending on the date relative to Advent). */
     Fixed { month: u8, day: u8 },
+}
+impl fmt::Display for DateCal {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if f.alternate() {
+            write!(
+                f,
+                "{}",
+                DateCalDiscriminants::VARIANTS[DateCalDiscriminants::from(self) as usize]
+            )
+        } else {
+            match self {
+                DateCal::Easter => write!(f, "Easter Day"),
+                DateCal::Advent => write!(f, "Advent Previous"),
+                DateCal::AdventNext => write!(f, "Advent Next"),
+                DateCal::After { date, rel } => {
+                    if *rel >= 0 {
+                        write!(f, "{rel} days after {date}")
+                    } else {
+                        write!(f, "{} days before {date}", -rel)
+                    }
+                },
+                // DateCal::Next { date, day_of_week } => write!(f, "{day_of_week} after {date}"),
+                DateCal::NextSunday { date } => write!(f, "Next Sunday on or after {date}",),
+                DateCal::Fixed { month, day } => write!(
+                    f,
+                    "{}",
+                    NaiveDate::from_ymd_opt(0i32, *month as u32, *day as u32)
+                        .unwrap()
+                        .format("%B %e")
+                ),
+            }
+        }
+    }
 }
 impl DateCal {
     /** `new_from_strings` creates a [DateCal from 3 strings] TODO better
@@ -632,11 +668,11 @@ impl DateCal {
             "After" => DateCal::After {
                 date: Box::new(Self::new_from_strings(v1, "", "")?),
                 rel: v2.parse().map_err(CalendarError::from_error)?,
-            }, // TODO fix error handling
-            "Next" => DateCal::NextSunday {
-                // obsolete, convert
-                date: Box::new(Self::new_from_strings("Fixed", v1, v2)?),
             },
+            // "Next" => DateCal::NextSunday {
+            //     // obsolete, convert
+            //     date: Box::new(Self::new_from_strings("Fixed", v1, v2)?),
+            // },
             "NextSunday" => DateCal::NextSunday {
                 date: Box::new(Self::new_from_strings("Fixed", v1, v2)?),
             },
@@ -646,19 +682,20 @@ impl DateCal {
             },
             _ => {
                 return Err(CalendarError::new(&format!(
-                    "unknown date calculation: {kind}"
+                    "unknown date calculation: {kind} with {v1}/{v2}"
                 )))
             },
         })
     }
 
-    /** `try_month` gets the month of the date if that makes sense */
+    /** `try_month_and_day` gets the month and day of the date if that makes
+     * sense */
     pub fn try_month_and_day(&self) -> Result<(u8, u8)> {
         match self {
-            DateCal::Next {
-                date,
-                day_of_week: _,
-            } => date.try_month_and_day(),
+            // DateCal::Next {
+            //     date,
+            //     day_of_week: _,
+            // } => date.try_month_and_day(),
             DateCal::NextSunday { date } => date.try_month_and_day(),
             DateCal::Fixed { month, day } => Ok((*month, *day)),
             _ => Err(CalendarError::new("cannot get month and day here")),
@@ -667,13 +704,14 @@ impl DateCal {
 
     /** `fixed` value as cleaned up */
     pub fn fixed(&self) -> Self {
-        match self {
-            DateCal::Next {
-                date,
-                day_of_week: _,
-            } => DateCal::NextSunday { date: date.clone() },
-            _ => self.clone(),
-        }
+        // match self {
+        // DateCal::Next {
+        //     date,
+        //     day_of_week: _,
+        // } => DateCal::NextSunday { date: date.clone() },
+        /* _ => */
+        self.clone()
+        // }
     }
 }
 impl DateCalDiscriminants {
@@ -690,7 +728,7 @@ impl DateCalDiscriminants {
             Self::After => "relative to another date, e.g. to Easter; negative means before",
             /*a specified day of the week after a specified date
             (e.g. Sunday after Epiphany) */
-            Self::Next => "(do not use)",
+            // Self::Next => "(do not use)",
             Self::NextSunday => "a Sunday after a specified date (e.g. after Epiphany)",
             /* may be in the previous
             calendar year (depending on the date relative to Advent). */
@@ -872,8 +910,8 @@ pub enum MainAttribute {
             description: "list of calendars".to_string(),
         };
         assert_eq!(
-            "en.wikipedia.org/wiki/List_of_Anglican_Church_calendars",
-            r.url()
+            "https://en.wikipedia.org/wiki/List_of_Anglican_Church_calendars",
+            r.url().unwrap().as_str()
         );
 ``` */
 pub struct Reference {
@@ -895,20 +933,37 @@ impl Reference {
     }
 
     /** the URL for the Reference */
-    pub fn url(&self) -> String { (self.website.prefix() + &self.article).clone() }
+    pub fn url(&self) -> Result<Url> {
+        self.website
+            .prefix()
+            .join(&self.article)
+            .map_err(CalendarError::from_error)
+    }
+}
+
+lazy_static! {
+    static ref WEB_SITES: HashMap<WebSite, Url> = {
+        let mut m = HashMap::new();
+        m.insert(
+            WebSite::Wikipedia,
+            Url::parse("https://en.wikipedia.org/wiki/").expect("bad url"),
+        );
+        m
+    };
 }
 /** WebSite is a web site that contains relevant information. */
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, Hash, Bake)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, Hash, Bake, strum::Display)]
 #[databake(path = calendar::calendar)]
 pub enum WebSite {
     Wikipedia,
 }
 impl WebSite {
     /** prefix is the prefix to a URL for this web site */
-    pub fn prefix(self) -> String {
-        match self {
-            WebSite::Wikipedia => "en.wikipedia.org/wiki/".to_string(),
-        }
+    pub fn prefix(self) -> Url {
+        // match self {
+        //     WebSite::Wikipedia => Url::parse("en.wikipedia.org/wiki/"),
+        // }
+        WEB_SITES.get(&self).expect("bad web site").clone()
     }
 }
 /** Season of the Church year */
@@ -930,8 +985,23 @@ pub enum SeasonColour {
     Green,
 }
 impl SeasonColour {
-    /** colour for HTML */
-    pub fn colour_a(&self) -> String {
+    // /** colour for HTML */
+    // pub fn colour_b(&self) -> String {
+    //     match self {
+    //         SeasonColour::White => "black",
+    //         _ => "white",
+    //     }
+    //     .to_string()
+    // }
+}
+// impl fmt::Display for SeasonColour {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//      ;
+//         fmt::Debug::fmt(&s, f)
+//     }
+// }
+impl std::string::ToString for SeasonColour {
+    fn to_string(&self) -> String {
         match self {
             SeasonColour::White => "white",
             SeasonColour::Red => "red",
@@ -940,19 +1010,8 @@ impl SeasonColour {
         }
         .to_string()
     }
+}
 
-    /** colour for HTML */
-    pub fn colour_b(&self) -> String {
-        match self {
-            SeasonColour::White => "black",
-            _ => "white",
-        }
-        .to_string()
-    }
-}
-impl fmt::Display for SeasonColour {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { fmt::Debug::fmt(self, f) }
-}
 /** A CalendarError is an [Error] which can be used in this crate. */
 #[derive(Debug, Clone)]
 pub struct CalendarError {
@@ -994,7 +1053,7 @@ pub struct ProvHolydaysByDate {
     phbd: HashMap<DateCal, Vec<ProvHolyday>>,
 }
 impl ProvHolydaysByDate {
-    /** load all the [Holyday]s from a [Calendar] */
+    /** load all the [Holyday]s from a [crate::perpetual::calendar::Calendar] */
     pub fn load_calendar(&mut self, cal: &calendar::Calendar) {
         for hd in cal.get_holydays() {
             let ph = ProvHolyday {
@@ -1022,10 +1081,12 @@ impl ProvHolydaysByDate {
 /** list all [ProvHolyday]s, grouped by tag, for reports */
 #[derive(Default, Debug)]
 pub struct ProvHolydaysByTag {
+    // is used
     phbt: HashMap<String, Vec<ProvHolyday>>,
 }
 impl ProvHolydaysByTag {
-    /** load all the [Holyday]s from a [Calendar] */
+    /** load all the [Holyday]s from a
+     * [crate::perpetual::calendar::Calendar]. Is used */
     pub fn load_calendar(&mut self, cal: &calendar::Calendar) {
         for hd in cal.get_holydays() {
             let ph = ProvHolyday {
@@ -1042,7 +1103,7 @@ impl ProvHolydaysByTag {
         }
     }
 
-    /** get all the tags with  [Holyday]s */
+    /** get all the tags with  [Holyday]s. Is used */
     pub fn tags(&self) -> Keys<String, Vec<ProvHolyday>> { self.phbt.keys() }
 
     /** get the   [ProvHolyday]s for a tag */
@@ -1050,7 +1111,8 @@ impl ProvHolydaysByTag {
         self.phbt.get(&tag).unwrap().iter()
     }
 }
-/** a [Holyday] in a specific [Calendar] (identified by its [Province]) */
+/** a [Holyday] in a specific [crate::perpetual::calendar::Calendar]
+ * (identified by its [Province]) */
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Ord, PartialOrd)]
 pub struct ProvHolyday {
     /** the province */

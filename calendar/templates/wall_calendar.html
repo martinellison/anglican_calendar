@@ -1,0 +1,82 @@
+<html>
+
+<head>
+    <style>
+        /*   https://paletton.com/#uid=7001O0kllllaFw0g0qFqFg0w0aF */
+        div.holyday {
+            padding: 0.5em;
+        }
+
+        div.white {
+            background-color: white;
+            color: black;
+        }
+
+        div.red {
+            background-color: #ffaaaa;
+            color: #550000
+        }
+
+        div.purple {
+            /* background-color: #9476ab; */
+            background-color: #532b72;
+            /* color: #220439 */
+            color: white;
+        }
+
+        div.green {
+            background-color: #88cc88;
+            color: #004400
+        }
+
+        div.gray {
+            background-color: #bbb;
+            color: black
+        }
+        table.wall {
+            border-collapse: collapse;
+        }
+
+        td.wall {
+            border: 1px solid;
+            width: 10%;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>Calendar for {{ province }} for {{ year }} </h1>
+    {% for month in months %}
+    <h2>{{ month.name }}</h2>
+    <table class="wall">
+        {% for week in month.weeks %}
+        <tr class="wall">
+            {% for day in week.days %}
+            <td class="wall">
+                {% match day -%}
+                {% when WallDay::Holy with (report_date) %}
+                <h3>{{ report_date.date.day() }}</h3>
+                {% for hd in report_date.holydays %}
+                {% match hd.drop_status %}
+                {% when DropStatus::Keep %}
+                <div class={{hd.colour}}>
+                {{ hd.descr() }}
+                </div>
+                {% when DropStatus::Drop with (reason) %}
+                <del>{{ hd.title }}</del> because {{ reason }}
+                {% endmatch %}
+                {% endfor %}
+                {% when WallDay::Unholy with (date) %}
+                <h3> {{ date.day() }}</h3>
+                {% when WallDay::NotDay %}
+                {% endmatch %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+</body>
+
+</html>

@@ -41,7 +41,7 @@
         <h2>{{date.date_form}}</h2>
         {% for holyday in date.holydays %}
         {% if holyday.drop_status == crate::year_calendar::DropStatus::Keep %} <div class="holyday {{holyday.colour}}">{% else %} <div class="holyday gray"> {% endif %}
-            <p><h3> {{ holyday.title }} ({{ holyday.class_format -}}) {{ holyday.death -}}
+            <p><h3> {{ holyday.descr() }} ({{ holyday.class_format -}}) {{ holyday.death -}}
                 {% for attr in holyday.attrs %} {{ attr -}} {% endfor -%}
                 {% for o in holyday.other %} {{ o -}} {% endfor -%} </h3>
                 {% for r in holyday.refs_format -%}

@@ -1,0 +1,120 @@
+<html>
+
+<head>
+    <style>
+        /*   https://paletton.com/#uid=7001O0kllllaFw0g0qFqFg0w0aF */
+        div.holyday {
+            padding: 0.5em;
+        }
+
+        div.white {
+            background-color: white;
+            color: black;
+        }
+
+        div.red {
+            background-color: #ffaaaa;
+            color: #550000
+        }
+
+        div.purple {
+            /* background-color: #9476ab; */
+            background-color: #532b72;
+            /* color: #220439 */
+            color: white;
+        }
+
+        div.green {
+            background-color: #88cc88;
+            color: #004400
+        }
+
+        div.gray {
+            background-color: #bbb;
+            color: black
+        }
+
+        th,
+        td {
+            text-align: left;
+            vertical-align: bottom;
+            padding: 0.2em;
+        }
+
+        tr {
+            text-align: left;
+            vertical-align: bottom;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Perpetual calendar for {{ province }} </h1>
+    {% for holyday in holydays %}
+    <h2>
+        {{ holyday.title() }}
+    </h2>
+    <table>
+
+        {% for attr in holyday.main() %}
+        <tr>
+            <th colspan=2> {{ attr }}</th>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th>Class</th>
+            <td> {{ holyday.class() }}</td>
+        </tr>
+        <tr>
+            <th>Date</th>
+            <td> {{ holyday.date_cal() }}</td>
+        </tr>
+        <tr>
+            <th>Transfer</th>
+            <td> {{ holyday.transfer() }}</td>
+        </tr>
+        {% if holyday.has_eve() %}
+        <tr>
+            <th>Eve</th>
+            <td>+Eve </td>
+        </tr>{% endif %}
+        {% if ! holyday.description().is_empty() %}
+        <tr>
+            <th>Description</th>
+            <td> {{ holyday.description() }}</td>
+
+        </tr>{% endif %}
+        {% if ! holyday.death().is_empty() %}
+        <tr>
+            <th>Death</th>
+            <td> {{ holyday.death() }}</td>
+        </tr>{% endif %}
+        {% if ! holyday.other().is_empty() %}<tr>
+            <th>Other</th>
+            <td>
+                {% for w in holyday.other() %}
+                {{ w }}
+                {% endfor %}</td>
+        </tr>
+        {% endif %}
+        {% if ! holyday.refs().is_empty() %} <tr>
+            <th>Reference</th>
+            <td>
+                {% for r in holyday.refs() %}
+                {% if ! r.article.is_empty() %}
+                {{ r.website }}: {{ r.article }}
+                {% endif %}
+                {% endfor %}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <th>Tag</th>
+            <td> {{ holyday.tag() }}</td>
+        </tr>
+    </table>
+    {% endfor %}
+
+</body>
+
+</html>

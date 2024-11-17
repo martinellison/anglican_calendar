@@ -25,7 +25,7 @@ use simplelog::{LevelFilter, SimpleLogger};
 use std::{
     fs::File,
     io::{BufReader, BufWriter, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 use structopt::StructOpt;
 /// a value or an error code
@@ -71,75 +71,126 @@ fn run() -> Result<()> {
     } else {
         perpetual::from_spreadsheet::read_from_spreadsheet(Path::new(&opt.calendar_filename))?
     };
-    let year_cal = YearCalendar::from_calendar(&cal, opt.year, opt.verbose)?;
-    // if opt.verbose {
-    debug!("{}", Green.paint("year calendar"));
-    // println!("{:#?}", year_cal);
-    // }
-    println!("{}", Green.paint("generating year calendar"));
-    let ident = format!("{}-{}", opt.unique, opt.year);
-    let (ical, ical_del) = year_cal.to_ical(ident.as_str());
-    if let Some(ical_fn) = opt.ical_filename {
-        println!(
-            "{}",
-            Green.paint(format!("writing year calendar {ical_fn}",))
-        );
-        let of = File::create(ical_fn).map_err(CalendarError::from_error)?;
-        let mut bw = BufWriter::new(of);
-        bw.write(ical.to_string().as_bytes())
-            .map_err(CalendarError::from_error)?;
-        bw.flush().map_err(CalendarError::from_error)?;
-    }
 
-    if let Some(dfn) = opt.ical_del_filename {
-        let of = File::create(dfn).map_err(CalendarError::from_error)?;
-        let mut bw = BufWriter::new(of);
-        bw.write(ical_del.to_string().as_bytes())
-            .map_err(CalendarError::from_error)?;
-        bw.flush().map_err(CalendarError::from_error)?;
-    }
-    if let Some(report_fn) = opt.report_filename {
-        println!(
-            "{}",
-            Green.paint(format!("writing year calendar report {}", report_fn))
-        );
-        let of = File::create(report_fn).map_err(CalendarError::from_error)?;
-        let mut bw = BufWriter::new(of);
-        year_cal.write_report(&mut bw)?;
-        bw.flush().map_err(CalendarError::from_error)?;
+    // if let Some(dfn) = opt.ical_del_filename {
+    //     let of = File::create(dfn).map_err(CalendarError::from_error)?;
+    //     let mut bw = BufWriter::new(of);
+    //     bw.write(ical_del.to_string().as_bytes())
+    //         .map_err(CalendarError::from_error)?;
+    //     bw.flush().map_err(CalendarError::from_error)?;
+    // }
+    match opt.cmd {
+        Command::ICal {
+            year,
+            ical_filename,
+            unique,
+        } => {
+            println!(
+                "{}",
+                Green.paint(format!("writing year calendar {ical_filename:?}",))
+            );
+            let year_cal = YearCalendar::from_calendar(&cal, year, opt.verbose)?;
+            let ident = format!("{}-{}", unique, year);
+            let (ical, _ical_del) = year_cal.to_ical(ident.as_str());
+            let of = File::create(ical_filename).map_err(CalendarError::from_error)?;
+            let mut bw = BufWriter::new(of);
+            bw.write(ical.to_string().as_bytes())
+                .map_err(CalendarError::from_error)?;
+            bw.flush().map_err(CalendarError::from_error)?;
+        },
+        Command::Report {
+            year,
+            report_filename,
+            wall_format,
+        } => {
+            println!(
+                "{}",
+                Green.paint(format!(
+                    "writing year calendar report {:?}",
+                    report_filename
+                ))
+            );
+            let year_cal = YearCalendar::from_calendar(&cal, year, opt.verbose)?;
+            let of = File::create(report_filename).map_err(CalendarError::from_error)?;
+            let mut bw = BufWriter::new(of);
+            if wall_format {
+                year_cal.write_wall_calendar(&mut bw)
+            } else {
+                year_cal.write_report(&mut bw)
+            }?;
+            bw.flush().map_err(CalendarError::from_error)?;
+        },
+        Command::PerpetualReport {
+            perpetual_report_filename,
+        } => {
+            println!(
+                "{}",
+                Green.paint(format!(
+                    "writing perpetual calendar report {:?}",
+                    perpetual_report_filename
+                ))
+            );
+            let pof = File::create(perpetual_report_filename).map_err(CalendarError::from_error)?;
+            let mut pbw = BufWriter::new(pof);
+            cal.write_perpetual_report(&mut pbw)?;
+            pbw.flush().map_err(CalendarError::from_error)?;
+        },
     }
     Ok(())
 }
 #[derive(StructOpt, Debug)]
-#[structopt(
-    name = "anglican_calendar",
-    about = "Process ecclestiastical calendars"
-)]
+#[structopt(name = "anglican_calendar", about = "Process ecclesiastical calendars")]
 /// Options from the command line
 pub struct Opt {
     /// Print some debugging messages
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
-    /// Year
-    #[structopt(short = "y", long = "year")]
-    year: i32,
     /// Calendar file to use
     #[structopt(short = "c", long = "calendar")]
     calendar_filename: String,
-    /// iCal output file
-    #[structopt(short = "i", long = "ical")]
-    ical_filename: Option<String>,
-    /// report output file
-    #[structopt(short = "r", long = "report")]
-    report_filename: Option<String>,
-    /// iCal output file for deletion (apparently does not work)
-    #[structopt(short = "d", long = "delical")]
-    ical_del_filename: Option<String>,
-    /// unique identifier for calendar **do not use domain name or email
-    /// address**
-    #[structopt(short = "u", long = "unique")]
-    unique: String,
-    /// read from old format filea
+    // /// iCal output file for deletion (apparently does not work)
+    // #[structopt(short = "d", long = "delical")]
+    // ical_del_filename: Option<String>,
+    /// read from old format input file
     #[structopt(short = "f", long = "from_old_format")]
     from_old_format: bool,
+    /// Command
+    #[structopt(subcommand)]
+    cmd: Command,
+}
+#[derive(StructOpt, Debug)]
+#[structopt(about = "Command")]
+enum Command {
+    /// Create an iCalendar that can be loaded into Google Calendar and the like
+    ICal {
+        /// Year e.g. 2024
+        #[structopt(short = "y", long = "year")]
+        year: i32,
+        /// iCal output file
+        #[structopt(short = "i", long = "ical")]
+        ical_filename: PathBuf,
+        /// unique identifier for calendar **do not use domain name or email
+        /// address**
+        #[structopt(short = "u", long = "unique")]
+        unique: String,
+    },
+    /// Create a report for a given year
+    Report {
+        /// Year e.g. 2024
+        #[structopt(short = "y", long = "year")]
+        year: i32,
+        /// report output file (should be html)
+        #[structopt(short = "r", long = "report")]
+        report_filename: PathBuf,
+        /// wall calendar format
+        #[structopt(short = "w", long = "wall")]
+        wall_format: bool,
+    },
+    /// Create a perpetual report (for all years)
+    PerpetualReport {
+        /// output file for a report on the perpetual calendar (should be html)
+        //#[structopt(short = "p", long = "perpetual-report")]
+        #[structopt(short = "r", long = "report")]
+        perpetual_report_filename: PathBuf,
+    },
 }

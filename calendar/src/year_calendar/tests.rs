@@ -35,7 +35,7 @@ fn test_transfers() {
     let day_holydays: Vec<YearHolyday> = vec![];
     let year = Year::new(2019);
     let mut year_holyday =
-        YearHolyday::from_holyday(&HolydayRef::new(Holyday::default()), &year).unwrap();
+        YearHolyday::from_holyday(&HolydayRef::new(Holyday::default()), &year, false).unwrap();
     let ye_exp = year_holyday.clone();
     let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
     assert_eq!(DropStatus::Keep, er);
@@ -54,7 +54,8 @@ fn test_easter() {
         transfer: TransferType::Normal,
         ..Holyday::default()
     };
-    let mut year_holyday = YearHolyday::from_holyday(&HolydayRef::new(holyday), &year).unwrap();
+    let mut year_holyday =
+        YearHolyday::from_holyday(&HolydayRef::new(holyday), &year, false).unwrap();
     let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
     assert_eq!(DropStatus::Keep, er);
     assert_eq!(
@@ -220,7 +221,8 @@ fn test_year(year_ad: i32, tests: &Vec<(DateCal, TransferType, Option<NaiveDate>
             transfer: *t,
             ..Holyday::default()
         };
-        let mut year_holyday = YearHolyday::from_holyday(&HolydayRef::new(holyday), &year).unwrap();
+        let mut year_holyday =
+            YearHolyday::from_holyday(&HolydayRef::new(holyday), &year, false).unwrap();
         let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
         assert_eq!(DropStatus::Keep, er);
         assert_eq!(

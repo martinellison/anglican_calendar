@@ -24,11 +24,19 @@ This project has been revised to change the main input format to spreadsheets as
 
 Old format input files can be converted; see `scripts/make-spreadsheets.sh` for an example script.
 
+### Version 0.2.4
+
+This is an interim development (alpha) version. It should build and run, also the tests should all run now. It is an improvement on 0.2.3, in that the output is closer to correct. Also, it has been refactored extensively.
+
+* the command line syntax has been changed.
+* added a 'perpetual report' that re-presents the data from the spreadsheet.
+* fixed errors.
+
 ### version 0.2.3
 
-This is an interim development (alpha) version. It should build and run, also the tests should all run now. It is an improvement on 0.2.2, in that the output is closer to correct. Also, it has been refactored extensively.
+This was an interim development (alpha) version. It should build and run, also the tests should all run now. It was an improvement on 0.2.2, in that the output is closer to correct. Also, it has been refactored extensively.
 
-However, the calendar that I am using for testing (Hong Kong) still does not match the official calendar issued by the Church authorities, so I need to revise the input file. Also, I need to add some other calendars, at least the 1662 BCP calendar.
+However, the calendar that I am using for testing (Hong Kong) still did not match the official calendar issued by the Church authorities, so I needed to revise the input file. Also, I needed to add some other calendars, at least the 1662 BCP calendar.
 
 ## How to do
 
@@ -41,6 +49,80 @@ guidelines on how to do them.
 * How to build the code.
 * How to modify a calendar or create a new calendar.
 * How to modify the code.
+
+### Usage
+
+```
+USAGE:
+    calendar [FLAGS] --calendar <calendar-filename> <SUBCOMMAND>
+
+FLAGS:
+    -f, --from_old_format    read from old format input file
+    -h, --help               Prints help information
+    -V, --version            Prints version information
+    -v, --verbose            Print some debugging messages
+
+OPTIONS:
+    -c, --calendar <calendar-filename>    Calendar file to use
+
+SUBCOMMANDS:
+    help                Prints this message or the help of the given subcommand(s)
+    i-cal               Create an iCalendar that can be loaded into Google Calendar and the like
+    perpetual-report    Create a perpetual report (for all years)
+    report              Create a report for a given year
+```
+
+Each subcommand now has its own additional parameters.
+
+### i-Cal (calendar for Google calendar etc)
+
+```
+Create an iCalendar that can be loaded into Google Calendar and the like
+
+USAGE:
+    calendar i-cal --ical <ical-filename> --unique <unique> --year <year>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -i, --ical <ical-filename>    iCal output file
+    -u, --unique <unique>         unique identifier for calendar **do not use domain name or email address**
+    -y, --year <year>             Year e.g. 2024
+```
+### Perptual report
+```
+Create a perpetual report (for all years)
+
+USAGE:
+    calendar perpetual-report --report <perpetual-report-filename>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -r, --report <perpetual-report-filename>    output file for a report on the perpetual calendar (should be html)
+```
+
+### Year report
+
+```
+Create a report for a given year
+
+USAGE:
+    calendar report --report <report-filename> --year <year>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -r, --report <report-filename>    report output file (should be html)
+    -y, --year <year>                 Year e.g. 2024
+```
+
 
 ### How to load the holy days of a Church calendar into your calendar
 

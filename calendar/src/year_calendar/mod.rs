@@ -1,14 +1,15 @@
 /*! Implements a calendar for a specific year, as derived from a
-[crate::calendar::calendar::Calendar](Calendar). */
+[crate::perpetual::calendar::Calendar]. */
 extern crate askama;
-use crate::perpetual::{CalendarError, HolydayClass, HolydayRef, MainAttribute, SeasonColour};
+use crate::perpetual::{CalendarError, HolydayClass, HolydayRef, MainAttribute};
 use askama::Template;
-use chrono::{Duration, NaiveDate};
-use std::cmp::Ordering;
+use chrono::{Datelike, Days, Duration, NaiveDate, Weekday};
+use std::{cmp::Ordering, collections::HashMap};
 /// a value or an error code
 type Result<T> = std::result::Result<T, CalendarError>;
 mod year;
 use getset::{CopyGetters, Getters, MutGetters};
+use log::debug;
 pub use year::Year;
 #[cfg(test)]
 mod tests;
@@ -40,25 +41,46 @@ pub enum DropReason {
 }
 #[derive(Debug, Eq, PartialEq, Clone, Getters, MutGetters, CopyGetters)]
 /** A YearHolyday is an holyday in the calendar for a specific year
-([YearCalendar]) e.g. in the 2019 calendar of the Anglican Church of
+([year_calendar::YearCalendar]) e.g. in the 2019 calendar of the Anglican Church of
 Hong Kong, Easter Sunday was 21 April and Matteo Ricci was 11 May. */
 pub struct YearHolyday {
     holyday: HolydayRef,
     #[getset(get_copy = "pub(crate)")]
     date: NaiveDate,
+    is_eve: bool,
     drop_status: DropStatus,
     advice: Vec<String>,
 }
 impl YearHolyday {
-    /** Create a [YearHolyday] from an [calendar::Holyday] given the [Year]
-     * data. */
-    pub fn from_holyday(holyday: &HolydayRef, year: &Year) -> Result<Self> {
+    /** Create a [YearHolyday] from an [Holyday](crate::perpetual::holyday::Holyday) given the [Year]
+    data. */
+    pub fn from_holyday(holyday: &HolydayRef, year: &Year, is_eve: bool) -> Result<Self> {
+        let orig_date = year.date_cal_to_date(&holyday.date_cal())?;
+        let date = if is_eve {
+            Self::eve(orig_date)
+        } else {
+            orig_date
+        };
+        let mut advice = vec![];
+        if is_eve {
+            advice.push(format!("eve of {}", &holyday.title()));
+        }
         Ok(Self {
             holyday: holyday.clone(),
-            date: year.date_cal_to_date(&holyday.date_cal())?,
-            advice: vec![],
+            date,
+            advice,
             drop_status: DropStatus::Keep,
+            is_eve,
         })
+    }
+
+    /** `eve` calculates the date of the eve/vigil of a holy day */
+    pub fn eve(date: NaiveDate) -> NaiveDate {
+        if date.weekday() == Weekday::Mon {
+            date - Days::new(2)
+        } else {
+            date - Days::new(1)
+        }
     }
 
     /** Change the date of a [YearHolyday] by a specified [Duration] */
@@ -113,12 +135,7 @@ impl YearHolyday {
                 ));
                 "white".to_string()
             },
-            _ => match year.season_colour(self.date, advice) {
-                SeasonColour::White => "white".to_string(),
-                SeasonColour::Red => "red".to_string(),
-                SeasonColour::Purple => "purple".to_string(),
-                SeasonColour::Green => "green".to_string(),
-            },
+            _ => year.season_colour(self.date, advice).to_string(),
         }
     }
 
@@ -145,16 +162,141 @@ struct ReportTemplate {
     year: i32,
     dates: Vec<ReportDate>,
 }
+/// the template for a wall calendar (for merging with the data)
+#[derive(Template)]
+#[template(path = "wall_calendar.html")]
+struct WallTemplate {
+    province: String,
+    year: i32,
+    months: Vec<WallMonth>,
+}
+impl WallTemplate {
+    /** Create a new WallTemplate */
+    pub fn new(province: String, year: i32, holydays: &Vec<ReportDate>) -> Self {
+        let mut months = vec![];
+        for m in 1..=12 {
+            months.push(WallMonth::new(year, m));
+        }
+        for day in holydays {
+            let m = day.date.month();
+            // let loc = months[m as usize].day_locs.get(&day.date).unwrap();
+            // months[m as usize].weeks[loc.w as usize].days[loc.wd as usize] =
+            //     WallDay::Holy(day.clone());
+            months[m as usize - 1].make_holy(day);
+        }
+        Self {
+            province,
+            year,
+            months,
+        }
+    }
+}
+struct DayLoc {
+    w: u8,
+    wd: u8,
+}
+/** A `WallMonth`  is the data for a month of a wall calendar */
+pub struct WallMonth {
+    weeks: Vec<WallWeek>,
+    name: String,
+    day_locs: HashMap<NaiveDate, DayLoc>,
+}
+impl WallMonth {
+    /** Create a new WallMonth */
+    pub fn new(y: i32, m: u32) -> Self {
+        let name = NaiveDate::from_ymd_opt(y, m, 1)
+            .unwrap()
+            .format("%B")
+            .to_string();
+        let mut weeks = vec![];
+        let mut day_locs = HashMap::new();
+        // find the Sunday of the first week of the month (typically in the previous
+        // month)
+        let start = NaiveDate::from_ymd_opt(y, m, 1)
+            .unwrap()
+            .week(Weekday::Sun)
+            .first_day();
+        debug!("month calendar starts on {start}");
+        let mut current_week = -1;
+        for md in 1..=31 {
+            if let Some(day) = NaiveDate::from_ymd_opt(y, m, md) {
+                // find which week of the month this day is in
+                let w = day.week(Weekday::Sun);
+                let wfd = w.first_day();
+                let wdiff = wfd - start;
+                let week_num = wdiff.num_weeks();
+                debug!(
+                    "day {y}-{m:02}-{md:02} is {day}, week starts {wfd} so week num {week_num}, \
+                     current week is {current_week}"
+                );
+                if week_num > current_week {
+                    assert_eq!(week_num, current_week + 1);
+                    weeks.push(WallWeek::new(y, m, week_num.try_into().unwrap()));
+                    current_week = week_num;
+                    assert_eq!(current_week, (weeks.len() as i64) - 1);
+                }
+                let wd = day.weekday().number_from_sunday() - 1;
+                weeks[current_week as usize].days[wd as usize] = WallDay::Unholy(day);
+                day_locs.insert(
+                    day,
+                    DayLoc {
+                        w: current_week.try_into().unwrap(),
+                        wd: wd.try_into().unwrap(),
+                    },
+                );
+            }
+        }
+        Self {
+            weeks,
+            name,
+            day_locs,
+        }
+    }
+
+    /** `make_holy` makes a day holy */
+    pub fn make_holy(&mut self, day: &ReportDate) {
+        let loc = self
+            .day_locs
+            .get(&day.date)
+            .unwrap_or_else(|| panic!("should have day {} in {}", &day.date, &self.name));
+        self.weeks[loc.w as usize].days[loc.wd as usize] = WallDay::Holy(day.clone());
+    }
+}
+/** A `WallWeek`  is the data for a week in a wall calendar */
+#[derive(Debug, Clone, Default)]
+pub struct WallWeek {
+    days: [WallDay; 7],
+}
+impl WallWeek {
+    fn new(y: i32, m: u32, w: u8) -> Self { Self::default() }
+
+    /** `has_day` week has at lease one day */
+    pub fn has_day(&self) -> bool { self.days.iter().any(|day| day.is_day()) }
+}
+/** A `WallDay`  is the data for a day in a wall calendar */
+#[derive(Debug, Clone)]
+pub enum WallDay {
+    Holy(ReportDate),
+    Unholy(NaiveDate),
+    NotDay,
+}
+impl WallDay {}
+impl Default for WallDay {
+    fn default() -> Self { Self::NotDay }
+}
+impl WallDay {
+    pub fn new() -> Self { Default::default() }
+
+    pub fn is_day(&self) -> bool { !matches!(self, Self::NotDay) }
+}
 /// All the data for a calendar date including holy days
 #[derive(Debug, Clone)]
 struct ReportDate {
-    //  date: NaiveDate, // is constructed and used in report
+    date: NaiveDate, // is constructed and used in report
     date_form: String,
     holydays: Vec<ReportHolyday>,
-    // colour_a: String,
-    // colour_b: String,
 }
-/// A [Holyday](calendar::Calendar) as it appears in a report
+/// A [Holyday](crate::perpetual::holyday::Holyday) as it appears in a report
 #[derive(Debug, Clone)]
 struct ReportHolyday {
     title: String,
@@ -165,8 +307,19 @@ struct ReportHolyday {
     refs_format: Vec<(String, String)>,
     death: String,
     attrs: Vec<String>,
+    is_eve: bool,
     drop_status: DropStatus,
     advice: Vec<String>,
+}
+impl ReportHolyday {
+    /** `descr` is a heading that describes this day */
+    pub fn descr(&self) -> String {
+        format!(
+            "{}{}",
+            if self.is_eve { "Eve of " } else { "" },
+            &self.title,
+        )
+    }
 }
 
 /*

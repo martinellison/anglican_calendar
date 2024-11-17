@@ -7,24 +7,27 @@ if [[ "$BASE" == "" ]]; then
 fi
 cd $BASE
 case "$TARG" in
-    release)
-        TARGOPT="--release"
-        echo "building release..."
-        ;;
-    debug | "")
-        TARGOPT=""
-        echo "building debug..."
-        ;;
-    *)
-        echo "unknown target" $TARG
-        exit 1
+release)
+    TARGOPT="--release"
+    echo "building release..."
+    ;;
+debug | "")
+    TARGOPT=""
+    echo "building debug..."
+    ;;
+*)
+    echo "unknown target" $TARG
+    exit 1
+    ;;
 esac
 echo 'building...'
 cargo build $TARGOPT
 if [[ "$TARG" == "release" ]]; then
     mkdir -p $BASE/bin
     TARGDIR=$BASE/target/release
-    mv $TARGDIR/calendar $TARGDIR//edit_data $TARGDIR/reports $BASE/bin
+    mv $TARGDIR/calendar $BASE/bin
+    mv $TARGDIR//edit_data $BASE/bin
+    mv $TARGDIR/reports $BASE/bin
 fi
 
 echo "build complete"

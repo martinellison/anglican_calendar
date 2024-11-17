@@ -1,9 +1,15 @@
+<!-- Required extensions: pymdownx.betterem, pymdownx.tilde, pymdownx.emoji, pymdownx.tasklist, pymdownx.superfences -->
 # To do list
 
  *CW* = *Common Worship* [Rules](https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules) for the Church's Year. See also [rules](#rules) below.
 
-## Correctness of existing functions and data
+## 0.2.4
 
+* implemented Eves (Vigils)
+    * Eves falling on a Sunday are put back to the Saturday
+        * at least for BCP 1662, should this be an option?
+
+## Correctness of existing functions and data
 
 * check/fix calculation for Baptism of Christ [0.2.3 2024 ok]
 * Corpus Christi [0.2.3 testing]
@@ -16,21 +22,34 @@
     * correct processing (remove/downgrade)
     * show explanation in report, same as calendar
 
+
 ### Current (0.2.3) issues
 
-Comparing
+* ~~St Irenæus (28 June) should be white, is green~~
+* ~~SS Anne and Joachim should be white, is green~~
+* ~~SS Mary, Martha & Lazarus should be white, is green~~
+* BVM is 8 September (this is optional)
+* ~~St John Chrysostom should be white, is green~~
+* ~~St Jerome should be white, is green~~
+* ~~St Francis Xavier and St Clement of Alexandria should be white not purple~~
+* ~~St Ambrose should be white not purple~~
+* not sure about some holy days e.g. Festival vs Lesser Festival
+
+### Old (0.2.2) issues
+
+~~Comparing
   1. the output of the current version (0.2.3), run against HKSKH spreadsheet for 2024, and
-  1. the calendar published by the HKSKH RERC. Note: this does not directly display the level of each holyday (or does it?).
+  1. the calendar published by the HKSKH RERC. Note: this does not directly display the level of each holyday (or does it?).~~
 
 * St Matthias should be martyr  [0.2.3 testing]
 * Annunciation — wrong date [0.2.3 testing]
 * Maundy Thursday — colour should be white [0.2.3 testing]
 * Holy Saturday should be holy day grey?
-* Trinity, Corpus Christi, SS Anne and Joachim, SS Mary etc, St Ignatius, St Dominic, St Gregory — colour all should be white
+* Trinity, Corpus Christi, ~~SS Anne and Joachim~~, SS Mary etc, St Ignatius, St Dominic, St Gregory — colour all should be white
 * BVM — date etc
-* St John Chr. — colour should be white
-* St Jerome — ?
-* All Souls', St Francis X, St Clement, St Ambrose — colour all should be white
+* ~~St John Chr. — colour should be white~~
+* ~~St Jerome — ?~~
+* All Souls', ~~St Francis X, St Clement, St Ambrose — colour all should be white~~
 
 ## Enhancements
 

@@ -1,7 +1,7 @@
 /*! code for [Year] */
 use crate::perpetual::{CalendarError, DateCal, Result, SeasonColour};
 use chrono::{Datelike, Duration, NaiveDate};
-use icalendar::*;
+// use icalendar::*;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 /** A Year contains data for a specific year e.g. the date of Easter.
@@ -108,7 +108,7 @@ impl Year {
         }
     }
 
-    /// find the date (of a [Holyday]) derived from a
+    /// find the date (of a [crate::perpetual::Holyday]) derived from a
     /// [DateCal] in the current year.
     pub(crate) fn date_cal_to_date(&self, date_cal: &DateCal) -> Result<NaiveDate> {
         Ok(match date_cal {
@@ -122,14 +122,14 @@ impl Year {
             DateCal::After { date, rel } => {
                 self.date_cal_to_date(date)? + Duration::days(i64::from(*rel))
             },
-            DateCal::Next { date, day_of_week } =>
-            // obsolete, do not use
-            {
-                Year::next_inclusive(
-                    self.date_cal_to_date(date)?,
-                    chrono::Weekday::from(day_of_week.clone()),
-                )
-            },
+            // DateCal::Next { date, day_of_week } =>
+            // // obsolete, do not use
+            // {
+            //     Year::next_inclusive(
+            //         self.date_cal_to_date(date)?,
+            //         chrono::Weekday::from(day_of_week.clone()),
+            //     )
+            // }
             DateCal::NextSunday { date } => {
                 Year::next_inclusive(self.date_cal_to_date(date)?, chrono::Weekday::Sun)
             },
@@ -159,31 +159,32 @@ impl Year {
         q + 28 - w
     }
 
-    /** the next day being the specified weekday, not including the original date.
+    // /** the next day being the specified weekday, not including the original
+    // date.
 
-    ```
-    use chrono::NaiveDate;
-    use crate::calendar;
-    use calendar::year_calendar::Year;
+    // ```
+    // use chrono::NaiveDate;
+    // use crate::calendar;
+    // use calendar::year_calendar::Year;
 
-    let base = NaiveDate::from_ymd(2019, 6, 15);
-    for (wd, date) in vec![
-        (chrono::Weekday::Sun, 16),
-        (chrono::Weekday::Sat, 22),
-        (chrono::Weekday::Mon, 17),
-    ] {
-        let act = Year::next_exclusive(base, wd);
-        let exp = NaiveDate::from_ymd(2019, 6, date);
-        assert_eq!(exp, act, "exp {:?} act {:?}", exp, act);
-    }
-    ```
-                         */
-    pub fn next_exclusive(orig_date: NaiveDate, weekday: chrono::Weekday) -> NaiveDate {
-        let orig_dow = orig_date.weekday().num_days_from_sunday() as i8; /* Sun = 0 etc */
-        let req_dow = weekday.num_days_from_sunday() as i8; /* Sun = 0 etc */
-        let offset = i64::from(req_dow - orig_dow + if req_dow <= orig_dow { 7 } else { 0 });
-        orig_date + Duration::days(offset)
-    }
+    // let base = NaiveDate::from_ymd(2019, 6, 15);
+    // for (wd, date) in vec![
+    //     (chrono::Weekday::Sun, 16),
+    //     (chrono::Weekday::Sat, 22),
+    //     (chrono::Weekday::Mon, 17),
+    // ] {
+    //     let act = Year::next_exclusive(base, wd);
+    //     let exp = NaiveDate::from_ymd(2019, 6, date);
+    //     assert_eq!(exp, act, "exp {:?} act {:?}", exp, act);
+    // }
+    // ```
+    //                      */
+    // pub fn next_exclusive(orig_date: NaiveDate, weekday: chrono::Weekday) -> NaiveDate {
+    //     let orig_dow = orig_date.weekday().num_days_from_sunday() as i8; /* Sun = 0 etc */
+    //     let req_dow = weekday.num_days_from_sunday() as i8; /* Sun = 0 etc */
+    //     let offset = i64::from(req_dow - orig_dow + if req_dow <= orig_dow { 7 } else { 0 });
+    //     orig_date + Duration::days(offset)
+    // }
 
     /** the next day being the specified weekday, including the original date.
 
@@ -209,29 +210,30 @@ impl Year {
         orig_date + Duration::days(offset)
     }
 
-    /** the most recent day being the specified weekday, excluding the original date.
+    // /** the most recent day being the specified weekday, excluding the original
+    // date.
 
-    ```
-    use chrono::NaiveDate;
-    use calendar::year_calendar::Year;
-    let base = NaiveDate::from_ymd(2019, 6, 15);
-    for (wd, date) in vec![
-        (chrono::Weekday::Sun, 9),
-        (chrono::Weekday::Sat, 8),
-        (chrono::Weekday::Mon, 10),
-    ] {
-        let act = Year::previous_exclusive(base, wd);
-        let exp = NaiveDate::from_ymd(2019, 6, date);
-        assert_eq!(exp, act, "exp {:?} act {:?}", exp, act);
-    }
-    ```
-                         */
-    pub fn previous_exclusive(orig_date: NaiveDate, weekday: chrono::Weekday) -> NaiveDate {
-        let orig_dow = orig_date.weekday().num_days_from_sunday() as i8; /* Sun = 0 etc */
-        let req_dow = weekday.num_days_from_sunday() as i8; /* Sun = 0 etc */
-        let offset = i64::from(req_dow - orig_dow + if req_dow < orig_dow { 0 } else { -7 });
-        orig_date + Duration::days(offset)
-    }
+    // ```
+    // use calendar::year_calendar::Year;
+    // use chrono::NaiveDate;
+    // let base = NaiveDate::from_ymd(2019, 6, 15);
+    // for (wd, date) in vec![
+    //     (chrono::Weekday::Sun, 9),
+    //     (chrono::Weekday::Sat, 8),
+    //     (chrono::Weekday::Mon, 10),
+    // ] {
+    //     let act = Year::previous_exclusive(base, wd);
+    //     let exp = NaiveDate::from_ymd(2019, 6, date);
+    //     assert_eq!(exp, act, "exp {:?} act {:?}", exp, act);
+    // }
+    // ```
+    //                      */
+    // pub fn previous_exclusive(orig_date: NaiveDate, weekday: chrono::Weekday) ->
+    // NaiveDate {     let orig_dow = orig_date.weekday().num_days_from_sunday()
+    // as i8; /* Sun = 0 etc */     let req_dow = weekday.num_days_from_sunday()
+    // as i8; /* Sun = 0 etc */     let offset = i64::from(req_dow - orig_dow +
+    // if req_dow < orig_dow { 0 } else { -7 });     orig_date +
+    // Duration::days(offset) }
 
     /** the most recent day being the specified weekday, including the original date.
 

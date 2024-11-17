@@ -1,4 +1,4 @@
-/*! outputs a [Calendar](super::Calendar) to a spreadsheet */
+/*! outputs a [Calendar](super::calendar::Calendar) to a spreadsheet */
 use crate::perpetual::{
     CalendarError, DateCal, DateCalDiscriminants, HolydayClass, MainAttribute, Province,
     TransferType, TransferTypeDiscriminants,
@@ -8,7 +8,8 @@ use std::path::Path;
 use strum::{EnumCount, /* IntoEnumIterator, */ VariantArray, VariantNames};
 
 impl crate::perpetual::calendar::Calendar {
-    /** `write_to_spreadsheet` writes a [super::Calendar] to a spreadsheet */
+    /** `write_to_spreadsheet` writes a [super::calendar::Calendar] to a
+     * spreadsheet */
     pub fn write_to_spreadsheet(&self, file: &Path) -> Result<(), CalendarError> {
         let mut workbook = Workbook::new();
         self.write_province(&mut workbook)?;
@@ -116,15 +117,15 @@ impl crate::perpetual::calendar::Calendar {
         )?;
         for dc in 0..super::DateCal::COUNT {
             // obsolete, do not document
-            if dc == super::DateCalDiscriminants::Next as usize {
-                continue;
-            }
+            // if dc == super::DateCalDiscriminants::Next as usize {
+            //     continue;
+            // }
             row += 1;
             worksheet.write_with_format(row, 1, DateCal::VARIANTS[dc], &bold_format)?;
             worksheet.write_with_format(
                 row,
                 2,
-                DateCalDiscriminants::VARIANTS[dc].description(),
+                DateCalDiscriminants::VARIANTS[dc],
                 &advice_format,
             )?;
         }
@@ -244,7 +245,7 @@ impl crate::perpetual::calendar::Calendar {
             worksheet.write((index + 1) as u32, col, day.class().to_string())?;
             col += 1;
             let date_cal = day.date_cal();
-            worksheet.write((index + 1) as u32, col, date_cal.to_string())?;
+            worksheet.write((index + 1) as u32, col, format!("{:#}", &date_cal))?;
             col += 1;
             match date_cal {
                 super::DateCal::Easter | super::DateCal::Advent | super::DateCal::AdventNext => {
@@ -252,7 +253,9 @@ impl crate::perpetual::calendar::Calendar {
                 },
                 super::DateCal::After { date, rel } => {
                     // note: loss of information for some date classes
-                    worksheet.write((index + 1) as u32, col, date.to_string())?;
+                    let date_fmt = format!("{:#}", date);
+                    // debug!("month as formatted {date_fmt}");
+                    worksheet.write((index + 1) as u32, col, date_fmt)?; // BUG
                     col += 1;
                     worksheet.write_number_with_format(
                         (index + 1) as u32,
@@ -262,26 +265,26 @@ impl crate::perpetual::calendar::Calendar {
                     )?;
                     col += 1;
                 },
-                super::DateCal::Next {
-                    date,
-                    day_of_week: _,
-                } => {
-                    let (month, day) = date.try_month_and_day()?;
-                    worksheet.write_number_with_format(
-                        (index + 1) as u32,
-                        col,
-                        month,
-                        &int_format,
-                    )?;
-                    col += 1;
-                    worksheet.write_number_with_format(
-                        (index + 1) as u32,
-                        col,
-                        day,
-                        &int_format,
-                    )?;
-                    col += 1;
-                },
+                // super::DateCal::Next {
+                //     date,
+                //     day_of_week: _,
+                // } => {
+                //     let (month, day) = date.try_month_and_day()?;
+                //     worksheet.write_number_with_format(
+                //         (index + 1) as u32,
+                //         col,
+                //         month,
+                //         &int_format,
+                //     )?;
+                //     col += 1;
+                //     worksheet.write_number_with_format(
+                //         (index + 1) as u32,
+                //         col,
+                //         day,
+                //         &int_format,
+                //     )?;
+                //     col += 1;
+                // }
                 super::DateCal::NextSunday { date } => {
                     let (month, day) = date.try_month_and_day()?;
                     worksheet.write_number_with_format(

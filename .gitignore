@@ -16,6 +16,6 @@ process_data/target/debug/**
 src/#*
 src/.#*
 data/fixes-used.ron
-bin/*
+bin/** 
 **/.~lock.*.xlsx#
 

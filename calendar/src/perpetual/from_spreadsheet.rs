@@ -170,7 +170,7 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                     .collect::<Vec<MainAttribute>>();
                 holyday.main.extend(attrs);
             },
-            _ => eprintln!("invalid header {}", &head),
+            _ => eprintln!("invalid header {} ignored", &head),
         }
     }
     Ok(holyday)

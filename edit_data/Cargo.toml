@@ -1,6 +1,6 @@
 [package]
 name = "edit_data"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["martin <m.e@acm.org>"]
 edition = "2018"
 
@@ -9,7 +9,7 @@ calendar = { path = "../calendar" }
 ansi_term = "0.12.1"
 structopt = "0.3.26"
 ron = "0.8.1"
-serde_derive = "1.0.203"
+serde_derive = "1.0.206"
 log = "0.4.22"
 simplelog = "0.12.2"
 convert_case = "0.6.0"
