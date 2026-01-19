@@ -1,8 +1,8 @@
 /*! inputs a [Calendar] from a spreadsheet */
 
-use super::{calendar::Calendar, CalendarError, DateCal, Holyday};
+use super::{CalendarError, DateCal, Holyday, calendar::Calendar};
 use crate::perpetual::{MainAttribute, Reference, WebSite::Wikipedia};
-use calamine::{open_workbook, Data, DataType, Reader, Xlsx};
+use calamine::{Data, DataType, Reader, Xlsx, open_workbook};
 use log::debug;
 use std::{path::Path, str::FromStr};
 
@@ -21,13 +21,13 @@ pub fn read_from_spreadsheet(file: &Path) -> Result<Calendar, CalendarError> {
                 if let Some(data_cell) = range.get((row, 1)) {
                     Ok(data_cell.as_string().unwrap_or_default().trim().to_string())
                 } else {
-                    Err(CalendarError::new("Cannot find {key} value}"))
+                    Err(CalendarError::new(&format!("Cannot find {key} value")))
                 }
             } else {
-                Err(CalendarError::new("Cannot find {key} header}"))
+                Err(CalendarError::new(&format!("Cannot find {key} header")))
             }
         } else {
-            Err(CalendarError::new("Cannot find {key} header}"))
+            Err(CalendarError::new(&format!("Cannot find {key} header")))
         }
     };
     let mut row = 0;
@@ -97,7 +97,8 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                         .ok_or(CalendarError::new("need to specify class"))?
                         .trim(),
                 )
-                .map_err(CalendarError::from_error)?
+                .map_err(CalendarError::from_error)
+                .map_err(|err| CalendarError::new(&format!("{err}: looking at '{val}'")))?
             },
 
             "Calculation" => {
@@ -140,8 +141,7 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                     .as_string()
                     .unwrap_or_default()
                     .trim()
-                    .to_ascii_lowercase()
-                    == "eve";
+                    .eq_ignore_ascii_case("eve");
             },
 
             "References" => {
@@ -161,7 +161,9 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                     .split('|')
                     .filter(|a| !a.is_empty())
                     .map(|a| {
-                        super::MainAttribute::from_str(a.trim()).map_err(CalendarError::from_error)
+                        super::MainAttribute::from_str(a.trim())
+                            .map_err(CalendarError::from_error)
+                            .map_err(|err| CalendarError::new(&format!("{err}: looking at '{a}'")))
                     })
                     .collect();
                 let attrs = attr_strs
@@ -170,7 +172,7 @@ pub fn holyday_from_row(row: &[Data], headers: &Vec<String>) -> Result<Holyday, 
                     .collect::<Vec<MainAttribute>>();
                 holyday.main.extend(attrs);
             },
-            _ => eprintln!("invalid header {} ignored", &head),
+            _ => eprintln!("column header '{}' not recognised, ignored", &head),
         }
     }
     Ok(holyday)

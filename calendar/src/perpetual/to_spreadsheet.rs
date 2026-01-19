@@ -38,7 +38,7 @@ impl crate::perpetual::calendar::Calendar {
         worksheet.write_with_format(
             row,
             2,
-            &format!(
+            format!(
                 "province of the Anglican Communion, valid values: {}",
                 Province::VARIANTS.join(", ")
             ),
@@ -101,7 +101,7 @@ impl crate::perpetual::calendar::Calendar {
         let worksheet = worksheet.write_with_format(
             row,
             2,
-            &format!(
+            format!(
                 "class of holyday, valid values (in increasing order): {}",
                 HolydayClass::VARIANTS.join(", ")
             ),
@@ -190,7 +190,7 @@ impl crate::perpetual::calendar::Calendar {
         worksheet.write_with_format(
             row,
             2,
-            &format!(
+            format!(
                 "attributes of worthy separated by '|', valid values: {}",
                 MainAttribute::VARIANTS.join(", ")
             ),
@@ -328,7 +328,11 @@ impl crate::perpetual::calendar::Calendar {
             worksheet.write(
                 (index + 1) as u32,
                 col,
-                day.has_eve().then_some("eve").unwrap_or_default(),
+                if day.has_eve() {
+                    "eve"
+                } else {
+                    Default::default()
+                },
             )?;
             col += 1;
             let refs = day

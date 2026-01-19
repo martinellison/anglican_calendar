@@ -1,6 +1,6 @@
 /*! test using a specific year calendar for transfers */
 use super::*;
-use crate::perpetual::{calendar::Calendar, CalendarError, HolydayClass, HolydayRef};
+use crate::perpetual::{CalendarError, HolydayClass, HolydayRef, calendar::Calendar};
 // use std::borrow::Borrow;
 use std::boxed;
 use year_calendar::YearCalendar;
@@ -56,7 +56,8 @@ fn test_year_2024_days() -> Result<()> {
         ),
     ] {
         let date = NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1).unwrap();
-        let holyday_opt = year_cal.holydays_by_date.get(&date);
+        let holydays = year_cal.holydays_by_date.get(&date);
+        let holyday_opt = holydays.get(0);
         let holyday = holyday_opt.ok_or_else(|| {
             CalendarError::new(&format!("expected a holy day on {date} ({})", test_case.2))
         })?;
@@ -65,13 +66,13 @@ fn test_year_2024_days() -> Result<()> {
             YEAR, test_case.0, test_case.1, test_case.2
         );
         let mut advice = vec![];
-        assert_eq!(holyday.len(), 1, "{}", &desc);
-        let holyday_1 = &holyday[0];
-        assert_eq!(holyday_1.drop_status, DropStatus::Keep, "{}", &desc);
-        let holyday_1_hd = &holyday_1.holyday;
-        let colour = holyday_1.colour(&year_cal.year, &mut advice);
-        assert_eq!(holyday_1_hd.title(), test_case.2, "{}", &desc);
-        assert_eq!(holyday_1_hd.class(), test_case.3, "{}", &desc);
+        assert_eq!(holydays.len(), 1, "{}", &desc);
+        // let holyday_1 = &holyday[0];
+        assert_eq!(holyday.drop_status, DropStatus::Keep, "{}", &desc);
+        let holyday_hd = &holyday.holyday;
+        let colour = holyday.colour(&year_cal.year, &mut advice);
+        assert_eq!(holyday_hd.title(), test_case.2, "{}", &desc);
+        assert_eq!(holyday_hd.class(), test_case.3, "{}", &desc);
         assert_eq!(colour, test_case.4, "{}: {}", &desc, advice.join(" "));
     }
     Ok(())
@@ -95,7 +96,7 @@ fn test_year_2024_nondays() -> Result<()> {
                     .get(&NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1).unwrap());
 
                 assert!(
-                    day.is_none(),
+                    day.is_empty(),
                     "{desc} should not be a holy day (this year), found {day:#?}",
                 );
             }
@@ -120,9 +121,9 @@ fn test_year_2024_should_drop() -> Result<()> {
                 let cal_day_opt = NaiveDate::from_ymd_opt(YEAR, test_case.0, test_case.1);
                 assert!(cal_day_opt.is_some(), "bad day {test_case:?}");
                 let day_opt = year_cal.holydays_by_date.get(&cal_day_opt.unwrap());
-                assert!(day_opt.is_some(), "no day {test_case:?}");
+                assert!(!day_opt.is_empty(), "no day {test_case:?}");
                 let mut found = false;
-                for day in day_opt.unwrap() {
+                for day in &day_opt {
                     if day.drop_status != DropStatus::Keep {
                         found = true;
                     }

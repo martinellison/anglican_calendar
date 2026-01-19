@@ -37,7 +37,13 @@ fn test_transfers() {
     let mut year_holyday =
         YearHolyday::from_holyday(&HolydayRef::new(Holyday::default()), &year, false).unwrap();
     let ye_exp = year_holyday.clone();
-    let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
+    let er = YearCalendar::fix_holyday_date_is_ok(
+        &day_holydays,
+        &mut year_holyday,
+        &year,
+        NaiveDate::from_ymd_opt(2019, 1, 1).expect("bad date"),
+        true,
+    );
     assert_eq!(DropStatus::Keep, er);
     assert_eq!(ye_exp, year_holyday, "bad holyday {:?}", year_holyday);
 }
@@ -56,7 +62,13 @@ fn test_easter() {
     };
     let mut year_holyday =
         YearHolyday::from_holyday(&HolydayRef::new(holyday), &year, false).unwrap();
-    let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
+    let er = YearCalendar::fix_holyday_date_is_ok(
+        &day_holydays,
+        &mut year_holyday,
+        &year,
+        NaiveDate::from_ymd_opt(2019, 1, 1).expect("bad date"),
+        true,
+    );
     assert_eq!(DropStatus::Keep, er);
     assert_eq!(
         NaiveDate::from_ymd_opt(2019, 4, 21),
@@ -223,7 +235,13 @@ fn test_year(year_ad: i32, tests: &Vec<(DateCal, TransferType, Option<NaiveDate>
         };
         let mut year_holyday =
             YearHolyday::from_holyday(&HolydayRef::new(holyday), &year, false).unwrap();
-        let er = YearCalendar::fix_holyday_date_is_ok(&day_holydays, &mut year_holyday, &year);
+        let er = YearCalendar::fix_holyday_date_is_ok(
+            &day_holydays,
+            &mut year_holyday,
+            &year,
+            NaiveDate::from_ymd_opt(2019, 1, 1).expect("bad date"),
+            true,
+        );
         assert_eq!(DropStatus::Keep, er);
         assert_eq!(
             *ed_opt,

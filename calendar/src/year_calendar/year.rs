@@ -1,7 +1,7 @@
 /*! code for [Year] */
 use crate::perpetual::{CalendarError, DateCal, Result, SeasonColour};
 use chrono::{Datelike, Duration, NaiveDate};
-// use icalendar::*;
+use serde::Serialize;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 /** A Year contains data for a specific year e.g. the date of Easter.
@@ -13,6 +13,7 @@ This includes some precalculated dates that are used
 
 n.b. We are taking holy week from Palm Sunday to Holy Saturday
 inclusive. */
+#[derive(Serialize)]
 pub struct Year {
     /** year AD/CE for the calendar. */
     pub ad: i32,
@@ -33,6 +34,8 @@ pub struct Year {
     pub easter_sunday_2: NaiveDate,
     /** date of Pentecost */
     pub pentecost: NaiveDate,
+    /** date of Trinity Sunday */
+    pub trinity: NaiveDate,
     /** date of the Annunciation TODO what if moved? */
     pub annunciation: NaiveDate,
     /** date of Christmas */
@@ -101,6 +104,7 @@ impl Year {
             maundy_thursday: easter - Duration::days(3),
             easter_sunday_2: easter + Duration::days(7), // 2nd Sunday of Easter (checked)
             pentecost: easter + Duration::days(49),
+            trinity: easter + Duration::days(56),
             annunciation: NaiveDate::from_ymd_opt(year, 3, 25).expect("invalid date"),
             christmas_next: NaiveDate::from_ymd_opt(year, 12, 25).expect("invalid date"),
             presentation: NaiveDate::from_ymd_opt(year, 2, 2).expect("invalid date"),
@@ -146,9 +150,9 @@ impl Year {
         // (solar correction) + 10, also used for day of week
         let e = (8 * c + 13) / 25; // (lunar correction) + 5
         let f = year % 19; // (golden number of year) - 1
-                           // Get q, where q = 53 - (Clavius epact), so that
-                           //    q + 21 = date of Paschal full moon in days since March 0.
-                           // Value on left of % is always >= 0, so no worry there.
+        // Get q, where q = 53 - (Clavius epact), so that
+        //    q + 21 = date of Paschal full moon in days since March 0.
+        // Value on left of % is always >= 0, so no worry there.
         let mut q = (227 - 11 * f + d - e) % 30;
         if (q == 29) || ((q == 28) && (f >= 11)) {
             q -= 1;
@@ -290,9 +294,14 @@ impl Year {
             || (date >= self.easter && date < self.pentecost)
             || date == self.all_saints
             || date == self.maundy_thursday
-        // TODO  for Trinity Sunday, for Festivals of Our Lord and the Blessed Virgin Mary,
+            || date == self.trinity
+            || date == self.annunciation
+        // TODO  for ~~Trinity Sunday,~~ for Festivals of Our Lord and the Blessed Virgin Mary,
         {
-            advice.push("season colour is white because Epiphany/Easter/All Saints".to_string());
+            advice.push(
+                "season colour is white because Epiphany/Annunciation/Easter/Trinity/All Saints"
+                    .to_string(),
+            );
             SeasonColour::White
         }
         /* "Red is used during Holy Week (except at Holy Communion on

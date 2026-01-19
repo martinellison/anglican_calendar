@@ -1,6 +1,7 @@
+// use icalendar::*;
 /*! [YearCalendar] code */
 use crate::{
-    perpetual::{calendar::Calendar, CalendarError, Province, TransferType},
+    perpetual::{CalendarError, Province, TransferType, calendar::Calendar},
     year_calendar::{
         DropReason, DropStatus, HolydayClass, ReportDate, ReportHolyday, ReportTemplate, Result,
         WallTemplate, Year, YearHolyday,
@@ -8,19 +9,50 @@ use crate::{
 };
 use ansi_term::Colour::*;
 use askama::Template;
-use chrono::{Datelike, Duration, NaiveDate, Weekday};
+use chrono::{Datelike, Days, Duration, NaiveDate, Weekday};
 use icalendar::{Component, EventLike};
 use log::debug;
-// use icalendar::*;
-use std::{collections::HashMap, io::Write};
+use serde::Serialize;
+use std::{collections::BTreeMap, io::Write, ops::Add};
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Eq, PartialEq, Clone, Default)]
+pub(crate) struct HolydaysByDate(BTreeMap<NaiveDate, Vec<YearHolyday>>);
+impl HolydaysByDate {
+    fn new() -> Self { Self(BTreeMap::new()) }
+
+    fn dates(&self) -> Vec<&NaiveDate> { self.0.keys().collect() }
+
+    pub(crate) fn insert(&mut self, date: NaiveDate, year_holidays: Vec<YearHolyday>) {
+        self.0.insert(date, year_holidays);
+    }
+
+    pub(crate) fn get(&self, date: &NaiveDate) -> Vec<YearHolyday> {
+        self.0.get(date).cloned().unwrap_or_default()
+    }
+
+    pub(crate) fn get_mut(&mut self, date: &NaiveDate) -> Option<&mut Vec<YearHolyday>> {
+        self.0.get_mut(date)
+    }
+
+    pub(crate) fn contains(&mut self, date: &NaiveDate) -> bool { self.0.contains_key(date) }
+
+    pub(crate) fn find_available(&self, start_date: NaiveDate) -> NaiveDate {
+        let mut trial_date = start_date;
+        while self.0.contains_key(&trial_date) || (trial_date.weekday() == Weekday::Sun) {
+            trial_date = trial_date.add(Days::new(1));
+            // eprintln!("trying {trial_date}");
+        }
+        trial_date
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Serialize)]
 /** A YearCalendar is a calendar for a specific year for a specific
 church e.g. the 2019 calendar of the Anglican Church of Hong Kong. */
 pub struct YearCalendar {
     province: Province,
     pub(crate) year: Year,
-    pub(crate) holydays_by_date: HashMap<NaiveDate, Vec<YearHolyday>>,
+    pub(crate) holydays_by_date: HolydaysByDate,
 }
 impl YearCalendar {
     /** Create a YearCalendar from a [Calendar] given the year. */
@@ -29,14 +61,15 @@ impl YearCalendar {
         let mut ycal = Self {
             year: y.clone(),
             province: calendar.province,
-            holydays_by_date: HashMap::new(),
+            holydays_by_date: HolydaysByDate::new(),
         };
         for hd in calendar.get_holydays() {
             let mut year_holyday = YearHolyday::from_holyday(&hd, &ycal.year, false)?;
-            ycal.add(&mut year_holyday, &y, verbose, true)?; // TODO program option keep_dropped
+            let next_available = ycal.holydays_by_date.find_available(year_holyday.date);
+            ycal.add(&mut year_holyday, &y, verbose, true, next_available)?; // TODO program option keep_dropped
             if hd.has_eve() {
                 let mut year_holyday_eve = YearHolyday::from_holyday(&hd, &ycal.year, true)?;
-                ycal.add(&mut year_holyday_eve, &y, verbose, true)?; // TODO program option keep_dropped
+                ycal.add(&mut year_holyday_eve, &y, verbose, true, next_available)?; // TODO program option keep_dropped
             }
         }
         Ok(ycal)
@@ -47,7 +80,6 @@ impl YearCalendar {
     See [RFC 5545](https://tools.ietf.org/html/rfc5545) and [RFC
     7986](https://tools.ietf.org/html/rfc7986) for details of the
     iCalendar format. */
-
     pub fn to_ical(&self, unique: &str) -> (icalendar::Calendar, icalendar::Calendar) {
         let mut ical = icalendar::Calendar::new();
 
@@ -58,10 +90,10 @@ impl YearCalendar {
         let mut ical_del = icalendar::Calendar::new();
         println!("unique code for holydays is {}", unique);
         let mut ix = 0;
-        let mut dates: Vec<&NaiveDate> = self.holydays_by_date.keys().collect();
+        let mut dates: Vec<&NaiveDate> = self.holydays_by_date.dates();
         dates.sort();
         for date in dates {
-            let year_holydays = &self.holydays_by_date[date];
+            let year_holydays = &self.holydays_by_date.get(date);
             for year_holyday in year_holydays {
                 let uid = format!("{}-{}", unique, ix);
                 let mut e1a = icalendar::Event::new();
@@ -75,7 +107,7 @@ impl YearCalendar {
                     .append_property(icalendar::Property::new("SEQUENCE", "0"))
                     .append_property(icalendar::Property::new(
                         "COLOR",
-                        &year_holyday.colour(&self.year, &mut advice),
+                        year_holyday.colour(&self.year, &mut advice),
                     ));
                 let refs = year_holyday.holyday.refs();
                 if !refs.is_empty() {
@@ -129,9 +161,29 @@ impl YearCalendar {
         w.write_all(r.as_bytes()).map_err(CalendarError::from_error)
     }
 
+    /** to_json writes a JSON object summarising the year calendar */
+    pub fn to_json<W: Write>(&self, w: W) -> Result<()> {
+        serde_json::to_writer_pretty(w, &self).map_err(CalendarError::from_error)?;
+        Ok(())
+    }
+
+    /** writes a simple file with one line for each holy day */
+    pub fn to_simple<W: std::io::Write>(&self, w: &mut W) -> Result<()> {
+        let mut dates: Vec<&NaiveDate> = self.holydays_by_date.dates();
+        dates.sort();
+        for date in dates {
+            let year_holydays = &self.holydays_by_date.get(date);
+            for year_holyday in year_holydays {
+                writeln!(w, "{} {}", date, year_holyday.holyday.title())
+                    .map_err(CalendarError::from_error)?;
+            }
+        }
+        Ok(())
+    }
+
     /** `report_dates` provides the [ReportDate]s for the [Year] */
     pub fn report_dates(&self) -> Vec<ReportDate> {
-        let mut dates: Vec<&NaiveDate> = self.holydays_by_date.keys().collect();
+        let mut dates: Vec<&NaiveDate> = self.holydays_by_date.dates();
         dates.sort();
         let mut report_dates = vec![];
         for date in dates {
@@ -142,7 +194,7 @@ impl YearCalendar {
                 date_form: date.format("%A %B %e").to_string(),
                 holydays: vec![],
             };
-            let year_holydays = &self.holydays_by_date[date];
+            let year_holydays = &self.holydays_by_date.get(date);
             for year_holyday in year_holydays {
                 let colour = year_holyday.colour(&self.year, &mut advice);
                 let mut refs_format: Vec<(String, String)> = vec![];
@@ -179,6 +231,19 @@ impl YearCalendar {
         report_dates
     }
 
+    /// find the highest holyday class from a collection (typically, of the
+    /// holydays falling on a given date)
+    pub(crate) fn highest_class(days: &[YearHolyday]) -> HolydayClass {
+        let mut highest = HolydayClass::NotAFestival;
+        for day in days {
+            let day_class = day.holyday.class();
+            if day_class > highest {
+                highest = day_class;
+            }
+        }
+        highest
+    }
+
     /// add a holyday to a report
     fn add(
         &mut self,
@@ -186,6 +251,7 @@ impl YearCalendar {
         year: &Year,
         verbose: bool,
         keep_dropped: bool,
+        next_available: NaiveDate,
     ) -> Result<()> {
         if verbose {
             println!(
@@ -194,51 +260,73 @@ impl YearCalendar {
                 year_holyday.holyday.title()
             );
         }
-        if let Some(day_holydays) = self.holydays_by_date.get_mut(&year_holyday.date) {
-            Self::add_holyday_if_ok(day_holydays, year_holyday, year, keep_dropped)?;
-        } else {
-            if verbose {
-                println!("new date {}", year_holyday.date);
+        let day_holydays = &self.holydays_by_date.get(&year_holyday.date);
+        if Self::add_holyday_if_ok(
+            day_holydays,
+            year_holyday,
+            year,
+            keep_dropped,
+            next_available,
+            verbose,
+        )? {
+            if !self.holydays_by_date.contains(&year_holyday.date) {
+                self.holydays_by_date.insert(year_holyday.date, vec![]);
             }
-            let mut de = vec![];
-            Self::add_holyday_if_ok(&mut de, year_holyday, year, keep_dropped)?;
-            self.holydays_by_date.insert(year_holyday.date, de);
-            // may insert empty list, is ok
-        };
+            self.holydays_by_date
+                .get_mut(&year_holyday.date)
+                .expect("missing date")
+                .push(year_holyday.clone());
+        }
         Ok(())
     }
 
     /// add a holyday to a report if it is not dropped
     fn add_holyday_if_ok(
-        day_holydays: &mut Vec<YearHolyday>,
+        day_holydays: &[YearHolyday],
         year_holyday: &mut YearHolyday,
         year: &Year,
         keep_dropped: bool,
-    ) -> Result<()> {
-        let ds = Self::fix_holyday_date_is_ok(day_holydays, year_holyday, year);
-        year_holyday.drop_status = ds.clone();
-        if let DropStatus::Drop(reason) = ds.clone() {
+        next_available: NaiveDate,
+        verbose: bool,
+    ) -> Result<bool> {
+        let drop_status: DropStatus =
+            Self::fix_holyday_date_is_ok(day_holydays, year_holyday, year, next_available, verbose);
+        year_holyday.drop_status = drop_status.clone();
+        if let DropStatus::Drop(reason) = drop_status.clone() {
             let msg = format!(
                 "{} dropped because: {reason}",
                 &year_holyday.holyday.title()
             );
-            println!("{}", Yellow.bold().paint(&msg));
+            println!("{}", Yellow.paint(&msg));
             year_holyday.add_advice(msg);
         }
-        if ds == DropStatus::Keep || keep_dropped {
-            day_holydays.push(year_holyday.clone());
-        } else if let DropStatus::Drop(r) = ds {
-            println!(
-                "{}",
-                Yellow.bold().paint(format!(
-                    "{} ({}) dropped because {:?}",
-                    year_holyday.holyday.title(),
-                    year_holyday.date,
-                    r
-                ))
-            );
+        if drop_status == DropStatus::Keep || keep_dropped {
+            if verbose {
+                println!(
+                    "{}",
+                    Yellow.paint(format!(
+                        "adding holy day of {} ({}) on {}",
+                        Cyan.bold().paint(year_holyday.holyday.title()),
+                        Cyan.bold().paint(year_holyday.holyday.class().to_string()),
+                        Cyan.bold().paint(year_holyday.date().to_string())
+                    ))
+                );
+            }
+            Ok(true)
+        } else {
+            if let DropStatus::Drop(r) = drop_status {
+                println!(
+                    "{}",
+                    Yellow.bold().paint(format!(
+                        "{} ({}) dropped because {:?}",
+                        year_holyday.holyday.title(),
+                        year_holyday.date,
+                        r
+                    ))
+                );
+            }
+            Ok(false)
         }
-        Ok(())
     }
 
     /**
@@ -258,6 +346,8 @@ impl YearCalendar {
         day_holydays: &[YearHolyday],
         year_holyday: &mut YearHolyday,
         year: &Year,
+        next_available: NaiveDate,
+        verbose: bool,
     ) -> DropStatus {
         // calculate some dates and date ranges
 
@@ -304,16 +394,8 @@ impl YearCalendar {
         }
 
         let day_has_holyday = !day_holydays.is_empty();
-        let mut clash_level = HolydayClass::NotAFestival;
-        //      let mut multi_level = false;
+        let clash_level = Self::highest_class(day_holydays);
         if day_has_holyday {
-            for ce in day_holydays.iter() {
-                let cel = ce.holyday.class();
-                if cel > clash_level {
-                    clash_level = cel;
-                    //   multi_level = true;
-                }
-            }
             let clashes = day_holydays
                 .iter()
                 .map(|yh| yh.holyday.title())
@@ -328,26 +410,41 @@ impl YearCalendar {
             // println!();
         }
 
-        let t = year_holyday.holyday.transfer();
-        let c = year_holyday.holyday.class();
-        let clash_higher = day_has_holyday && clash_level > c;
+        let transfer = year_holyday.holyday.transfer();
+        let class = year_holyday.holyday.class();
+        if verbose {
+            println!(
+                "{}",
+                Yellow.paint(format!(
+                    "applying {transfer} transfer for {class} from {}, already have \
+                     {clash_level}{}",
+                    Cyan.bold().paint(format!("{}", year_holyday.date)),
+                    if day_has_holyday {
+                        " (coincides with another holyday)"
+                    } else {
+                        ""
+                    }
+                ))
+            );
+        }
+        let clash_higher = day_has_holyday && clash_level > class;
         if clash_higher {
             year_holyday.add_advice(format!(
-                "{c} coincides with a higher holy day ({clash_level}), transfer is {t}"
+                "{class} coincides with a higher holy day ({clash_level}), transfer is {transfer}"
             ));
+            if verbose {
+                println!("coincides with a {clash_level}");
+            }
         }
-        match t {
-            // TODO no 'saints days' in Easter Week
+        match transfer {
             TransferType::Normal => {
-                match c {
+                match class {
                     HolydayClass::Commemoration => {
                         /* no transfer required */
-                        // TODO should drop on Sunday?
                         if is_in_easter {
                             year_holyday.add_advice("commemoration in Easter");
                             DropStatus::Drop(DropReason::Easter)
                         } else if is_sunday {
-                            // TODO this should depend on transfer type
                             year_holyday.add_advice("commemoration on Sunday");
                             DropStatus::Drop(DropReason::Sunday)
                         } else {
@@ -371,7 +468,9 @@ impl YearCalendar {
                     HolydayClass::Festival | HolydayClass::CorpusChristi => {
                         if (is_sunday && (is_in_advent || is_in_lent_or_eastertide)) || clash_higher
                         {
-                            year_holyday.add_advice("Festival or Corpus Christi date changed");
+                            year_holyday.add_advice(
+                                "Festival or Corpus Christi date changed one day later",
+                            );
                             year_holyday.change_date_by(Duration::days(1))
                         }
                         DropStatus::Keep
@@ -414,9 +513,6 @@ impl YearCalendar {
                 }
                 DropStatus::Keep
             },
-            // TransferType::BaptismOfChrist => {
-            //     Ok(true)
-            // }
             TransferType::Joseph => {
                 if is_in_easter {
                     // let abvm = NaiveDate::from_ymd_opt(year.ad, 3, 25).expect("invalid date");
@@ -452,13 +548,6 @@ impl YearCalendar {
                 }
                 DropStatus::Keep
             },
-            // TransferType::BeforeAdventNext => {
-            //     if year_holyday.date >= year.advent_next {
-            //         DropStatus::Drop(DropReason::Cutoff)
-            //     } else {
-            //         DropStatus::Keep
-            //     }
-            // },
             TransferType::DoNotTransfer => DropStatus::Keep,
             TransferType::EpiphanyOption => {
                 // if the date is already a Sunday, it is not changed
@@ -500,10 +589,10 @@ impl YearCalendar {
             },
             TransferType::NextDayOnClash => {
                 if clash_higher {
-                    // TODO check: do we ever have to move by 2 days or more?
-                    year_holyday.change_date_by(Duration::days(1));
+                    year_holyday.change_date_to(next_available);
                     year_holyday.add_advice(
-                        "Moved to the following day because it coincides with another holy day",
+                        "Moved to the next available day because it coincides with another holy \
+                         day",
                     );
                 }
                 DropStatus::Keep
@@ -511,6 +600,15 @@ impl YearCalendar {
             TransferType::KeepOnClash => {
                 if clash_higher {
                     year_holyday.add_advice("Kept ever though it coincides with another holy day");
+                }
+                DropStatus::Keep
+            },
+            TransferType::TransferIfSunday => {
+                if is_sunday {
+                    year_holyday.change_date_to(next_available);
+                    year_holyday.add_advice(
+                        "Moved to the next available day because it occurs on a Sunday",
+                    );
                 }
                 DropStatus::Keep
             },

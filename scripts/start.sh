@@ -8,27 +8,24 @@ else
     cd $BASE
     MACHINE=$(uname -n)
     echo "machine is $MACHINE, setting machine-specific options"
+  
     case $MACHINE in
-    edward | pinkipi | xiaomading | xiaosan) ;;
-    tarantula)
-        export RUST_SRC_PATH="$(rustc --print sysroot)/lib/rustlib/src/rust/src"
-        ;;
+	localhost)
+	    ARCH=""
+	    ;;
+	*)
+	    ARCH="+nightly"
+	    codium anglican_calendar.code-workspace&
+	    ;;
     esac
     cd $BASE
-    rustup default stable
-    echo "opening IDE"
-    codium anglican_calendar.code-workspace &
-    # echo "upgrading crates..."
-    # cargo upgrade --incompatible
-    echo "updating crates..."
-    cargo update 
     echo "fixing..."
-    cargo +nightly fix --allow-dirty --allow-staged
+    cargo $ARCH fix --workspace --allow-dirty --allow-staged
     echo "clipping..."
-    cargo clippy --fix --all-targets --allow-dirty --allow-staged
+    cargo $ARCH clippy --fix --all-targets --all-features --allow-dirty --allow-staged --keep-going
     echo "formatting..."
-    cargo +nightly fmt
-
+    cargo $ARCH fmt --all
+   
     echo "building..."
     cd $BASE
     export PATH=$PATH:$BASE/scripts:$BASE/target/debug

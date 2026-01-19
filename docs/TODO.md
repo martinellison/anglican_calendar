@@ -3,6 +3,8 @@
 
  *CW* = *Common Worship* [Rules](https://www.churchofengland.org/prayer-and-worship/worship-texts-and-resources/common-worship/churchs-year/rules) for the Church's Year. See also [rules](#rules) below.
 
+ * add "Eve of" to title of vigils
+
 ## 0.2.4
 
 * implemented Eves (Vigils)

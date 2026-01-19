@@ -4,12 +4,12 @@ extern crate askama;
 use crate::perpetual::{CalendarError, HolydayClass, HolydayRef, MainAttribute};
 use askama::Template;
 use chrono::{Datelike, Days, Duration, NaiveDate, Weekday};
+use serde::Serialize;
 use std::{cmp::Ordering, collections::HashMap};
 /// a value or an error code
 type Result<T> = std::result::Result<T, CalendarError>;
 mod year;
 use getset::{CopyGetters, Getters, MutGetters};
-use log::debug;
 pub use year::Year;
 #[cfg(test)]
 mod tests;
@@ -17,7 +17,7 @@ mod tests;
 mod tests2;
 pub mod year_calendar;
 /** whether a [YearHolyday] will be dropped. */
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize)]
 pub enum DropStatus {
     Keep,
     Drop(DropReason),
@@ -31,7 +31,7 @@ impl std::fmt::Display for DropStatus {
     }
 }
 /** reason for dropping a [YearHolyday] */
-#[derive(Debug, Eq, PartialEq, Clone, strum::Display)]
+#[derive(Debug, Eq, PartialEq, Clone, strum::Display, Serialize)]
 pub enum DropReason {
     Easter,
     Clash,
@@ -43,6 +43,7 @@ pub enum DropReason {
 /** A YearHolyday is an holyday in the calendar for a specific year
 ([year_calendar::YearCalendar]) e.g. in the 2019 calendar of the Anglican Church of
 Hong Kong, Easter Sunday was 21 April and Matteo Ricci was 11 May. */
+#[derive(Serialize)]
 pub struct YearHolyday {
     holyday: HolydayRef,
     #[getset(get_copy = "pub(crate)")]
@@ -124,10 +125,9 @@ impl YearHolyday {
             return "red".to_string();
         }
         match self.holyday.class() {
-            // HolydayClass::Principal |
-          HolydayClass::CorpusChristi |
-            // |
-            HolydayClass::Festival | HolydayClass::LesserFestival => {
+            // HolydayClass::Principal |  WHY NOT (Annunciation, Trinity) ? not Ash Wed, Palm Sun,
+            // Good Fri, Easter Eve, Pentecost all red
+            HolydayClass::CorpusChristi | HolydayClass::Festival | HolydayClass::LesserFestival => {
                 advice.push(format!(
                     "{} ({}) has colour white",
                     self.holyday.title(),
@@ -216,7 +216,7 @@ impl WallMonth {
             .unwrap()
             .week(Weekday::Sun)
             .first_day();
-        debug!("month calendar starts on {start}");
+        // debug!("month calendar starts on {start}");
         let mut current_week = -1;
         for md in 1..=31 {
             if let Some(day) = NaiveDate::from_ymd_opt(y, m, md) {
@@ -225,10 +225,10 @@ impl WallMonth {
                 let wfd = w.first_day();
                 let wdiff = wfd - start;
                 let week_num = wdiff.num_weeks();
-                debug!(
-                    "day {y}-{m:02}-{md:02} is {day}, week starts {wfd} so week num {week_num}, \
-                     current week is {current_week}"
-                );
+                // debug!(
+                //     "day {y}-{m:02}-{md:02} is {day}, week starts {wfd} so week num
+                // {week_num}, \      current week is {current_week}"
+                // );
                 if week_num > current_week {
                     assert_eq!(week_num, current_week + 1);
                     weeks.push(WallWeek::new(y, m, week_num.try_into().unwrap()));
@@ -268,22 +268,20 @@ pub struct WallWeek {
     days: [WallDay; 7],
 }
 impl WallWeek {
-    fn new(y: i32, m: u32, w: u8) -> Self { Self::default() }
+    fn new(_y: i32, _m: u32, _w: u8) -> Self { Self::default() }
 
     /** `has_day` week has at lease one day */
     pub fn has_day(&self) -> bool { self.days.iter().any(|day| day.is_day()) }
 }
 /** A `WallDay`  is the data for a day in a wall calendar */
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum WallDay {
     Holy(ReportDate),
     Unholy(NaiveDate),
+    #[default]
     NotDay,
 }
 impl WallDay {}
-impl Default for WallDay {
-    fn default() -> Self { Self::NotDay }
-}
 impl WallDay {
     pub fn new() -> Self { Default::default() }
 

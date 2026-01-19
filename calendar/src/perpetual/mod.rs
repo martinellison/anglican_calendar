@@ -10,14 +10,14 @@ use std::{
     // borrow::{Borrow, BorrowMut},
     cell::RefCell,
     cmp::Ordering,
-    collections::{hash_map::Keys, HashMap, HashSet},
+    collections::{HashMap, HashSet, hash_map::Keys},
     error::Error,
     fmt,
     hash::{Hash, Hasher},
     rc::Rc,
     str::FromStr,
 };
-use strum::{VariantArray, VariantNames};
+use strum::VariantNames;
 use strum_macros::Display;
 use url::Url;
 pub mod from_spreadsheet;
@@ -349,9 +349,10 @@ impl fmt::Debug for HolydayRef {
 // }
 /** An `HolydaySort` is an ordering of Holydays within a calendar file. None of
 these orderings will give chronological order because of moveable holydays. */
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Display)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Display, Default)]
 pub enum HolydaySort {
     /// do not Sort
+    #[default]
     NoSort,
     /// order by class and then date_cal (Ord above)
     Normal,
@@ -359,9 +360,6 @@ pub enum HolydaySort {
     DateCal,
     /// order by tag
     Tag,
-}
-impl Default for HolydaySort {
-    fn default() -> Self { Self::NoSort }
 }
 impl FromStr for HolydaySort {
     type Err = CalendarError;
@@ -645,13 +643,12 @@ impl fmt::Display for DateCal {
                 },
                 // DateCal::Next { date, day_of_week } => write!(f, "{day_of_week} after {date}"),
                 DateCal::NextSunday { date } => write!(f, "Next Sunday on or after {date}",),
-                DateCal::Fixed { month, day } => write!(
-                    f,
-                    "{}",
-                    NaiveDate::from_ymd_opt(0i32, *month as u32, *day as u32)
-                        .unwrap()
-                        .format("%B %e")
-                ),
+                DateCal::Fixed { month, day } => {
+                    match NaiveDate::from_ymd_opt(0i32, *month as u32, *day as u32) {
+                        Some(date) => write!(f, "{}", date.format("%B %e")),
+                        None => write!(f, "[invalid date {month}/{day}]"),
+                    }
+                },
             }
         }
     }
@@ -667,7 +664,10 @@ impl DateCal {
             "AdventNext" => DateCal::AdventNext,
             "After" => DateCal::After {
                 date: Box::new(Self::new_from_strings(v1, "", "")?),
-                rel: v2.parse().map_err(CalendarError::from_error)?,
+                rel: v2
+                    .parse()
+                    .map_err(CalendarError::from_error)
+                    .map_err(|err| CalendarError::new(&format!("{err}: looking at '{v2}'")))?,
             },
             // "Next" => DateCal::NextSunday {
             //     // obsolete, convert
@@ -683,7 +683,7 @@ impl DateCal {
             _ => {
                 return Err(CalendarError::new(&format!(
                     "unknown date calculation: {kind} with {v1}/{v2}"
-                )))
+                )));
             },
         })
     }
@@ -751,7 +751,9 @@ impl OrderableDayOfWeek {
     /** `new_from_string` creates a a[OrderableDayOfWeek] from a string */
     pub fn new_from_str(s: &str) -> Result<Self> {
         Ok(Self {
-            wd: Weekday::from_str(s).map_err(CalendarError::from_error)?,
+            wd: Weekday::from_str(s)
+                .map_err(CalendarError::from_error)
+                .map_err(|err| CalendarError::new(&format!("{err}: looking at '{s}'")))?,
         })
     }
 }
@@ -799,8 +801,10 @@ to another date or dropped */
 #[databake(path = calendar::calendar)]
 #[strum(ascii_case_insensitive)]
 #[strum_discriminants(derive(strum::VariantArray))]
+#[derive(Default)]
 pub enum TransferType {
     /** follow the usual rules using the holy day's [HolydayClass] */
+    #[default]
     Normal,
     /** special rule for Annunciation */
     Annunciation,
@@ -833,9 +837,8 @@ pub enum TransferType {
     NextDayOnClash,
     /** keep if it coincides with a higher holy day (keep both) and downgrade */
     KeepOnClash,
-}
-impl Default for TransferType {
-    fn default() -> Self { Self::Normal }
+    /** transfer to the next available day if it occurs on a Sunday */
+    TransferIfSunday,
 }
 impl TransferType {
     pub fn new() -> Self { Self::Normal }
@@ -874,6 +877,9 @@ impl TransferTypeDiscriminants {
             TransferTypeDiscriminants::KeepOnClash => {
                 "keep if it coincides with a higher holy day (keep both) and downgrade"
             },
+            TransferTypeDiscriminants::TransferIfSunday => {
+                "if it falls on a Sunday, transfer to the next available day"
+            },
         }
         .to_string()
     }
@@ -897,7 +903,16 @@ impl TransferTypeDiscriminants {
 #[databake(path = calendar::calendar)]
 #[strum(ascii_case_insensitive)]
 pub enum MainAttribute {
+    Abbot,
+    Apostle,
+    Archbishop,
+    Bishop,
+    Confessor,
+    Evangelist,
+    King,
     Martyr,
+    Priest,
+    Virgin,
 }
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Hash, Bake)]
 #[databake(path = calendar::calendar)]
@@ -1031,9 +1046,14 @@ impl CalendarError {
         } else {
             "".to_string()
         };
-        println!("{}", Purple.bold().paint(format!("error is {:#?}", err)));
+        println!(
+            "{}",
+            Purple
+                .bold()
+                .paint(format!("error is {:#?} from {srce}", err))
+        );
         CalendarError {
-            msg: format!("error: {:?}{}", err.source().to_owned(), srce),
+            msg: format!("error: {:?}{srce} from {err}", err.source().to_owned()),
         }
     }
 }
@@ -1071,7 +1091,7 @@ impl ProvHolydaysByDate {
     }
 
     /** get all the dates with  [Holyday]s */
-    pub fn dates(&self) -> Keys<DateCal, Vec<ProvHolyday>> { self.phbd.keys() }
+    pub fn dates(&self) -> Keys<'_, DateCal, Vec<ProvHolyday>> { self.phbd.keys() }
 
     /** get the   [ProvHolyday]s for a date */
     pub fn by_date(&self, date: DateCal) -> impl Iterator<Item = &ProvHolyday> {
@@ -1104,7 +1124,7 @@ impl ProvHolydaysByTag {
     }
 
     /** get all the tags with  [Holyday]s. Is used */
-    pub fn tags(&self) -> Keys<String, Vec<ProvHolyday>> { self.phbt.keys() }
+    pub fn tags(&self) -> Keys<'_, String, Vec<ProvHolyday>> { self.phbt.keys() }
 
     /** get the   [ProvHolyday]s for a tag */
     pub fn by_tag(&self, tag: String) -> impl Iterator<Item = &ProvHolyday> {

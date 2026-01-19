@@ -171,7 +171,7 @@ fn run() -> Result<()> {
             {
                 c.write_to_spreadsheet(Path::new(
                     &opt.out_file
-                        .ok_or(CalendarError::new("missing ?output file name"))?,
+                        .ok_or(CalendarError::new(("missing out file name")))?,
                 ))?;
             }
         } else {

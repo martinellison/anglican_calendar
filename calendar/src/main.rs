@@ -111,7 +111,11 @@ fn run() -> Result<()> {
                 ))
             );
             let year_cal = YearCalendar::from_calendar(&cal, year, opt.verbose)?;
-            let of = File::create(report_filename).map_err(CalendarError::from_error)?;
+            let of = File::create(&report_filename)
+                .map_err(CalendarError::from_error)
+                .map_err(|err| {
+                    CalendarError::new(&format!("{err} when trying to create {report_filename:?}"))
+                })?;
             let mut bw = BufWriter::new(of);
             if wall_format {
                 year_cal.write_wall_calendar(&mut bw)
@@ -134,6 +138,34 @@ fn run() -> Result<()> {
             let mut pbw = BufWriter::new(pof);
             cal.write_perpetual_report(&mut pbw)?;
             pbw.flush().map_err(CalendarError::from_error)?;
+        },
+        Command::Json {
+            year,
+            json_filename,
+        } => {
+            println!(
+                "{}",
+                Green.paint(format!("writing JSON output {:?}", json_filename))
+            );
+            let year_cal = YearCalendar::from_calendar(&cal, year, opt.verbose)?;
+            let jf = File::create(json_filename).map_err(CalendarError::from_error)?;
+            let mut jw = BufWriter::new(jf);
+            year_cal.to_json(&mut jw)?;
+            jw.flush().map_err(CalendarError::from_error)?;
+        },
+        Command::Text {
+            year,
+            output_filename,
+        } => {
+            println!(
+                "{}",
+                Green.paint(format!("writing simple output {:?}", output_filename))
+            );
+            let year_cal = YearCalendar::from_calendar(&cal, year, opt.verbose)?;
+            let of = File::create(output_filename).map_err(CalendarError::from_error)?;
+            let mut ow = BufWriter::new(of);
+            year_cal.to_simple(&mut ow)?;
+            ow.flush().map_err(CalendarError::from_error)?;
         },
     }
     Ok(())
@@ -192,5 +224,21 @@ enum Command {
         //#[structopt(short = "p", long = "perpetual-report")]
         #[structopt(short = "r", long = "report")]
         perpetual_report_filename: PathBuf,
+    },
+    /// Create a JSON file that can be read by other programs
+    Json {
+        /// Year e.g. 2024
+        #[structopt(short = "y", long = "year")]
+        year: i32,
+        #[structopt(short = "j", long = "json")]
+        json_filename: PathBuf,
+    },
+    /// create a simple text file that can be read by other programs
+    Text {
+        /// Year e.g. 2024
+        #[structopt(short = "y", long = "year")]
+        year: i32,
+        #[structopt(short = "o", long = "out")]
+        output_filename: PathBuf,
     },
 }

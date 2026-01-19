@@ -24,6 +24,14 @@ This project has been revised to change the main input format to spreadsheets as
 
 Old format input files can be converted; see `scripts/make-spreadsheets.sh` for an example script.
 
+### Version 0.2.5
+
+* data corrections: Hong Kong and BCP calendars corrected.
+* Hong Kong calendar also aligned to official 2026 calendar.
+* refactored code for coincidence of holy days (error fix).
+* new extract function producing a simple list of holy days for a year.
+* various errors fixed.
+
 ### Version 0.2.4
 
 This is an interim development (alpha) version. It should build and run, also the tests should all run now. It is an improvement on 0.2.3, in that the output is closer to correct. Also, it has been refactored extensively.
